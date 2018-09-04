@@ -2,7 +2,7 @@ language: go
 go:
   - "1.11"
 before_install:
-  - export GO111MODULE=auto
+  - export GO111MODULE=on
 install:
   - go get -u github.com/mgechev/revive
 before_script:
