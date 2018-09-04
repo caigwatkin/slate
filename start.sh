@@ -24,12 +24,12 @@ echo "Linting..."
 revive -formatter stylish -config ${SCRIPT_DIR}/config/revive.toml -exclude ${SCRIPT_DIR}/vendor/... ${SCRIPT_DIR}/...
 echo
 
-echo "Building..."
-go build -mod=vendor -o bin/${API} ${API_MAIN}
-echo
-
 echo "Testing..."
 go test -mod=vendor ${API_MAIN}/...
+echo
+
+echo "Building..."
+go build -mod=vendor -o bin/${API} ${API_MAIN}
 echo
 
 echo "Running..."
