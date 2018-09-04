@@ -1,6 +1,8 @@
 language: go
 go:
   - "1.11"
+before_script:
+  - go get -u github.com/mgechev/revive
 install:
   - ls -al
   - go vet ./cmd/slate/...
