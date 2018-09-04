@@ -1,9 +1,9 @@
 language: go
 go:
   - "1.11"
-before_script:
-  - go get -u github.com/mgechev/revive
 install:
+  - go get -u github.com/mgechev/revive
+before_script:
   - ls -al
   - go vet ./cmd/slate/...
   - revive -formatter stylish -config ./config/revive.toml -exclude ./vendor/... ./...
