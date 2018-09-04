@@ -10,6 +10,8 @@ SCRIPT_NAME=`basename $0`
 API=${1}
 API_MAIN=./cmd/${1}
 
+export GO111MODULE=on
+
 echo "${SCRIPT_NAME} -> START at `date '+%Y-%m-%d %H:%M:%S'`..."
 
 echo "Formatting..."
@@ -21,7 +23,7 @@ go vet -mod=vendor ${API_MAIN}/...
 echo
 
 echo "Linting..."
-revive -formatter stylish -config ${SCRIPT_DIR}/config/revive.toml -exclude ${SCRIPT_DIR}/vendor/... ${SCRIPT_DIR}/...
+revive -formatter stylish -config ${SCRIPT_DIR}/../../config/revive.toml -exclude ${SCRIPT_DIR}/../../vendor/... ${SCRIPT_DIR}/...
 echo
 
 echo "Testing..."
