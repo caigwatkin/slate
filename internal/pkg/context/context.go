@@ -34,9 +34,9 @@ func Background() context.Context {
 	return WithTest(ctx, false)
 }
 
-// StartUp new ctx with background correlation ID
+// StartUp new ctx with start up correlation ID
 func StartUp() context.Context {
-	ctx := WithCorrelationID(context.Background(), CorrelationIDBackground)
+	ctx := WithCorrelationID(context.Background(), CorrelationIDStartUp)
 	return WithTest(ctx, false)
 }
 
