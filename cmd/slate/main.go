@@ -34,6 +34,5 @@ func main() {
 	log.Info(ctx, "Slate client created")
 
 	slateClient.ListenAndServe(ctx, 8080)
-
 	log.Fatal(ctx, "Slate client unexpectedly returned from listening and serving, terminating")
 }
