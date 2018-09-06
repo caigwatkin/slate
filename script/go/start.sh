@@ -14,6 +14,14 @@ export GO111MODULE=on
 
 echo "${SCRIPT_NAME} -> START at `date '+%Y-%m-%d %H:%M:%S'`..."
 
+echo "Tidying..."
+go mod tidy
+echo
+
+echo "Vendoring..."
+go mod vendor
+echo
+
 echo "Formatting..."
 go fmt ${API_MAIN}/...
 echo
