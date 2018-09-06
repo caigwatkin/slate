@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"os"
-	"slate/internal/app/api"
+	"slate/internal/app/slate"
 	"slate/internal/pkg/context"
 	"slate/internal/pkg/log"
 	"slate/internal/pkg/secret"
@@ -30,11 +30,11 @@ func main() {
 	}
 	log.Info(ctx, "Secret client created")
 
-	apiClient := api.NewClient(api.Config{
+	apiClient := slate.NewRESTAPIClient(slate.Config{
 		Env:          "dev",
 		GCPProjectID: "slate-00",
 		Port:         ":8080",
-	}, api.Deps{
+	}, slate.Deps{
 		SecretClient: secretClient,
 	})
 	log.Info(ctx, "Slate client created")
