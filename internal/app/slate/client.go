@@ -1,18 +1,16 @@
-package api
+package slate
 
 import (
 	"context"
 	"net/http"
-	"slate/internal/app/api/middleware"
-	"slate/internal/app/api/route"
-	"slate/internal/pkg/errors"
 	"slate/internal/pkg/log"
 	"slate/internal/pkg/secret"
 
 	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
 )
 
-type APIClient struct {
+type RESTAPIClient struct {
 	config Config
 	deps   Deps
 	router *chi.Mux
@@ -28,25 +26,23 @@ type Deps struct {
 	SecretClient *secret.Client
 }
 
-func NewClient(config Config, deps Deps) APIClient {
+func NewRESTAPIClient(config Config, deps Deps) RESTAPIClient {
 
 	router := chi.NewRouter()
-	middleware.Default(router)
-
-	router.Route("/hello-world", func(router chi.Router) {
-		router.Get("/", route.HelloWorld())
-	})
-
-	return APIClient{
+	apiClient := RESTAPIClient{
 		config: config,
 		deps:   deps,
 		router: router,
 	}
+	apiClient.middleware()
+	apiClient.api()
+
+	return apiClient
 }
 
-func (api APIClient) ListenAndServe(ctx context.Context) error {
+func (api RESTAPIClient) ListenAndServe(ctx context.Context) error {
 
-	log.Info(ctx, "Listening", log.FmtString(api.config.Port, "port"))
+	log.Info(ctx, "Listening and serving", log.FmtString(api.config.Port, "port"))
 	if err := http.ListenAndServe(api.config.Port, api.router); err != nil {
 		return errors.Wrap(err, "Failed listening and serving")
 	}
