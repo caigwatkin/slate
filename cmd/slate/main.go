@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"os"
-	"slate/internal/app/slate"
+	"slate/internal/app/api"
 	"slate/internal/pkg/context"
 	"slate/internal/pkg/log"
 	"slate/internal/pkg/secret"
@@ -30,9 +30,16 @@ func main() {
 	}
 	log.Info(ctx, "Secret client created")
 
-	slateClient := slate.NewClient(secretClient)
+	apiClient := api.NewClient(api.Config{
+		Env:          "dev",
+		GCPProjectID: "slate-00",
+		Port:         ":8080",
+	}, api.Deps{
+		SecretClient: secretClient,
+	})
 	log.Info(ctx, "Slate client created")
 
-	slateClient.ListenAndServe(ctx, 8080)
-	log.Fatal(ctx, "Slate client unexpectedly returned from listening and serving, terminating")
+	if err := apiClient.ListenAndServe(ctx); err != nil {
+		log.Fatal(ctx, "Slate client unexpectedly returned from listening and serving, terminating", log.FmtError(err))
+	}
 }
