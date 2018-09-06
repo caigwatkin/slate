@@ -18,16 +18,12 @@ echo "Tidying..."
 go mod tidy
 echo
 
-echo "Vendoring..."
-go mod vendor
-echo
-
 echo "Formatting..."
 go fmt ${API_MAIN}/...
 echo
 
 echo "Vetting..."
-go vet -mod=vendor ${API_MAIN}/...
+go vet ${API_MAIN}/...
 echo
 
 echo "Linting..."
@@ -35,11 +31,11 @@ revive -formatter stylish -config ${SCRIPT_DIR}/../../config/revive.toml -exclud
 echo
 
 echo "Testing..."
-go test -mod=vendor ${API_MAIN}/...
+go test ${API_MAIN}/...
 echo
 
 echo "Building..."
-go build -mod=vendor -o bin/${API} ${API_MAIN}
+go build -o bin/${API} ${API_MAIN}
 echo
 
 echo "Running..."
