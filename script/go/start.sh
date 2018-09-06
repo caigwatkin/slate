@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
-# Run:
-# $ ./start.sh [cmd]
+# Run from repo root:
+# $ ./script/go/start.sh [cmd]
 
 SCRIPT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 SCRIPT_DIR_NAME=${SCRIPT_DIR##*/}
@@ -18,16 +18,12 @@ echo "Tidying..."
 go mod tidy
 echo
 
-echo "Vendoring..."
-go mod vendor
-echo
-
 echo "Formatting..."
-go fmt ${API_MAIN}/...
+go fmt ${API}/...
 echo
 
 echo "Vetting..."
-go vet -mod=vendor ${API_MAIN}/...
+go vet ${API}/...
 echo
 
 echo "Linting..."
@@ -35,11 +31,11 @@ revive -formatter stylish -config ${SCRIPT_DIR}/../../config/revive.toml -exclud
 echo
 
 echo "Testing..."
-go test -mod=vendor ${API_MAIN}/...
+go test ${API}/...
 echo
 
 echo "Building..."
-go build -mod=vendor -o bin/${API} ${API_MAIN}
+go build -o bin/${API} ${API_MAIN}
 echo
 
 echo "Running..."
