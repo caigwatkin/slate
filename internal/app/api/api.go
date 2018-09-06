@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"slate/internal/app/api/middleware"
 	"slate/internal/app/api/route"
+	"slate/internal/pkg/errors"
 	"slate/internal/pkg/log"
 	"slate/internal/pkg/secret"
-	"slate/internal/pkg/errors"
 
 	"github.com/go-chi/chi"
 )
