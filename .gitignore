@@ -10,4 +10,3 @@
 # Go binaries
 /bin
 /pkg
-/vendor

@@ -14,16 +14,12 @@ export GO111MODULE=on
 
 echo "${SCRIPT_NAME} -> START at `date '+%Y-%m-%d %H:%M:%S'`..."
 
-echo "Tidying..."
-go mod tidy
-echo
-
 echo "Formatting..."
 go fmt ${API}/...
 echo
 
 echo "Vetting..."
-go vet ${API}/...
+go vet -mod vendor ${API}/...
 echo
 
 echo "Linting..."
@@ -31,11 +27,11 @@ revive -formatter stylish -config ${SCRIPT_DIR}/../../configs/revive.toml -exclu
 echo
 
 echo "Testing..."
-go test ${API}/...
+go test -mod vendor ${API}/...
 echo
 
 echo "Building..."
-go build -o bin/${API} ${API_MAIN}
+go build -mod vendor -o bin/${API} ${API_MAIN}
 echo
 
 echo "Running..."
