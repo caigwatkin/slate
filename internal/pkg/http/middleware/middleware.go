@@ -19,28 +19,22 @@ package middleware
 import (
 	"net/http"
 	pkg_context "slate/internal/pkg/context"
+	"slate/internal/pkg/http/constants"
 	"slate/internal/pkg/log"
 	"strings"
 
 	"github.com/google/uuid"
 )
 
-const (
-	HeaderKeyXSlateCorrelationID = "X-Slate-Correlation-Id"
-	HeaderKeyXSlateTest          = "X-Slate-Test"
-
-	HeaderValXSlateTest = "5c1bca85-9e09-4af4-96ac-7f353265838c"
-)
-
 func PopulateContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
-		if v, ok := r.Header[HeaderKeyXSlateCorrelationID]; ok {
+		if v, ok := r.Header[constants.HeaderKeyXSlateCorrelationID]; ok {
 			ctx = pkg_context.WithCorrelationIDAppend(ctx, strings.Join(v, ","))
 		}
 		var t bool
-		if v, ok := r.Header[HeaderKeyXSlateTest]; ok {
-			t = strings.Join(v, ",") == HeaderValXSlateTest
+		if v, ok := r.Header[constants.HeaderKeyXSlateTest]; ok {
+			t = strings.Join(v, ",") == constants.HeaderValXSlateTest
 		}
 		ctx = pkg_context.WithTest(ctx, t)
 		next.ServeHTTP(w, r.WithContext(ctx))
@@ -68,7 +62,7 @@ func (l *RequestLogger) Info(next http.Handler) http.Handler {
 			}
 		}
 		if !exclude {
-			log.Info(r.Context(), "HTTP Request Received",
+			log.Info(r.Context(), "HTTP Request",
 				log.FmtString(r.URL.String(), "URL"),
 				log.FmtString(r.Method, "Method"),
 				log.FmtAny(r.Header, "Header"),

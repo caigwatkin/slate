@@ -41,8 +41,8 @@ func NewRESTAPIClient(config Config, deps Deps) RESTAPIClient {
 }
 
 func (api RESTAPIClient) ListenAndServe(ctx context.Context) error {
-
 	log.Info(ctx, "Listening and serving", log.FmtString(api.config.Port, "port"))
+
 	if err := http.ListenAndServe(api.config.Port, api.router); err != nil {
 		return errors.Wrap(err, "Failed listening and serving")
 	}

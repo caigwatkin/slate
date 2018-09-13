@@ -1,7 +1,7 @@
 package slate
 
 import (
-	"slate/internal/pkg/middleware"
+	"slate/internal/pkg/http/middleware"
 
 	chi_middleware "github.com/go-chi/chi/middleware"
 )

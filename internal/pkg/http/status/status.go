@@ -1,4 +1,4 @@
-package errors
+package status
 
 import (
 	"encoding/json"
@@ -14,17 +14,14 @@ type Status struct {
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
 }
 
-// NewStatus for rendering
 func NewStatus(code int, message string) *Status {
 	return newStatus(1, code, message, nil)
 }
 
-// NewStatusWithMetadata for rendering
 func NewStatusWithMetadata(code int, message string, metadata map[string]interface{}) *Status {
 	return newStatus(1, code, message, metadata)
 }
 
-// NewStatusf for rendering
 func NewStatusf(code int, format string, args ...interface{}) *Status {
 	return newStatus(1, code, fmt.Sprintf(format, args...), nil)
 }
@@ -39,12 +36,11 @@ func newStatus(atSkip, code int, message string, metadata map[string]interface{}
 	}
 }
 
-func (s *Status) Error() string {
+func (s Status) Error() string {
 	return fmt.Sprintf("%q: %q, %q: %q, %q: %q", "code", s.Code, "message", s.Message, "at", s.At)
 }
 
-// Render returns the message string if the code is configured to be publicisable
-func (s *Status) Render() []byte {
+func (s Status) Render() []byte {
 	v := map[string]interface{}{
 		"code": s.Code,
 	}

@@ -1,14 +1,14 @@
 #!/bin/bash -eu
 
 # Run from repo root:
-# $ ./script/go/start.sh [cmd]
+# $ ./scripts/go/start.sh [cmd]
 
 SCRIPT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 SCRIPT_DIR_NAME=${SCRIPT_DIR##*/}
 SCRIPT_NAME=`basename $0`
 
-API=${1}
-API_MAIN=./cmd/${1}
+API="slate"
+API_MAIN="./cmd/slate"
 
 export GO111MODULE=on
 
@@ -27,7 +27,7 @@ go vet ${API}/...
 echo
 
 echo "Linting..."
-revive -formatter stylish -config ${SCRIPT_DIR}/../../config/revive.toml -exclude ${SCRIPT_DIR}/../../vendor/... ${SCRIPT_DIR}/...
+revive -formatter stylish -config ${SCRIPT_DIR}/../../configs/revive.toml -exclude ${SCRIPT_DIR}/../../vendor/... ${SCRIPT_DIR}/...
 echo
 
 echo "Testing..."
