@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package secret
+package secrets
 
 import (
 	"context"
@@ -40,7 +40,6 @@ func newCloudkmsService(ctx context.Context) (*cloudkms.Service, error) {
 	return cloudKMSService, nil
 }
 
-// CloudKMSValue returns the decrypted secret for the secret type passed
 func (s *Client) CloudKMSValue(source, kind string) (string, error) {
 	filename := fmt.Sprintf("%s-%s-cloudkms_%s.json", source, kind, os.Getenv("ENV"))
 	p, err := s.value(filename, cloudKMSLoadAndDecrypt)

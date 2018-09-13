@@ -23,10 +23,22 @@ import (
 	"slate/internal/pkg/log"
 	"strings"
 
+	"github.com/go-chi/chi"
+	chi_middleware "github.com/go-chi/chi/middleware"
 	"github.com/google/uuid"
 )
 
-func PopulateContext(next http.Handler) http.Handler {
+func Default(r *chi.Mux, requestLoggingExclusionPaths []string) {
+	r.Use(chi_middleware.RequestID)
+	r.Use(chi_middleware.DefaultCompress)
+	r.Use(chi_middleware.Logger)
+	r.Use(chi_middleware.Recoverer)
+	r.Use(chi_middleware.URLFormat)
+	r.Use(populateContext)
+	r.Use(infoLogRequests(requestLoggingExclusionPaths))
+}
+
+func populateContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
 		if v, ok := r.Header[constants.HeaderKeyXSlateCorrelationID]; ok {
@@ -41,34 +53,25 @@ func PopulateContext(next http.Handler) http.Handler {
 	})
 }
 
-type RequestLogger struct {
-	exclude []string
-}
-
-func NewRequestLogger(exclude []string) *RequestLogger {
-	return &RequestLogger{
-		exclude: exclude,
-	}
-}
-
-func (l *RequestLogger) Info(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		url := r.URL.String()
-		var exclude bool
-		for _, v := range l.exclude {
-			if url == v {
-				exclude = true
-				break
+func infoLogRequests(exclusionPaths []string) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			url := r.URL.String()
+			var exclude bool
+			for _, v := range exclusionPaths {
+				if url == v {
+					exclude = true
+					break
+				}
 			}
-		}
-		if !exclude {
-			log.Info(r.Context(), "HTTP Request",
-				log.FmtString(r.URL.String(), "URL"),
-				log.FmtString(r.Method, "Method"),
-				log.FmtAny(r.Header, "Header"),
-			)
-		}
-		next.ServeHTTP(w, r)
+			if !exclude {
+				log.Info(r.Context(), "HTTP Request",
+					log.FmtString(r.URL.String(), "URL"),
+					log.FmtString(r.Method, "Method"),
+					log.FmtAny(r.Header, "Header"),
+				)
+			}
+			next.ServeHTTP(w, r)
+		})
 	}
-	return http.HandlerFunc(fn)
 }

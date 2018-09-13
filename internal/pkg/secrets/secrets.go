@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package secret
+package secrets
 
 import (
 	"context"
@@ -33,7 +33,6 @@ type Client struct {
 	secrets         map[string]string
 }
 
-// NewClient for secret management
 func NewClient(ctx context.Context) (*Client, error) {
 	cloudKMSService, err := newCloudkmsService(ctx)
 	if err != nil {
