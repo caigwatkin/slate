@@ -1,6 +1,8 @@
 language: go
 go:
   - "1.11"
+env:
+  - CODECOV_TOKEN="dfe8163e-dd0c-4c2e-9c62-bce7a87eeeff"
 before_install:
   - export GO111MODULE=on
 install:
