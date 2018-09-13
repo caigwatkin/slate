@@ -28,7 +28,6 @@ import (
 	"time"
 )
 
-// Init logger
 func Init(debug bool) {
 	l.debug = debug
 }
@@ -37,34 +36,28 @@ type Field struct {
 	s string
 }
 
-// Debug severity log
 func Debug(ctx context.Context, message string, fields ...Field) {
 	if l.debug {
 		output(ctx, severityDebug, message, fields)
 	}
 }
 
-// Info severity log
 func Info(ctx context.Context, message string, fields ...Field) {
 	output(ctx, severityInfo, message, fields)
 }
 
-// Warn severity log
 func Warn(ctx context.Context, message string, fields ...Field) {
 	output(ctx, severityWarn, message, fields)
 }
 
-// Error severity log
 func Error(ctx context.Context, message string, fields ...Field) {
 	output(ctx, severityError, message, fields)
 }
 
-// Fatal severity log
 func Fatal(ctx context.Context, message string, fields ...Field) {
 	output(ctx, severityFatal, message, fields)
 }
 
-// FmtAny into field
 func FmtAny(value interface{}, name string) Field {
 	blob, err := json.MarshalIndent(value, "\t", "\t")
 	if err != nil {
@@ -77,52 +70,42 @@ func FmtAny(value interface{}, name string) Field {
 	return Field{fmt.Sprintf("%q: %s", name, blob)}
 }
 
-// FmtBool into field
 func FmtBool(value bool, name string) Field {
 	return Field{fmt.Sprintf("%q: %t", name, value)}
 }
 
-// FmtByte into field
 func FmtByte(value byte, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
-// FmtBytes into field
 func FmtBytes(value []byte, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
-// FmtDuration into field
 func FmtDuration(value time.Duration, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
-// FmtError into field
 func FmtError(value error) Field {
 	return Field{fmt.Sprintf("%q: {\n\t\t%q: %q,\n\t\t%q: \"%+v\"\n\t}", "error", "friendly", value, "trace", value)}
 }
 
-// FmtFloat64 into field
 func FmtFloat64(value float64, name string) Field {
 	return Field{fmt.Sprintf("%q: %f", name, value)}
 }
 
-// FmtInt into field
 func FmtInt(value int, name string) Field {
 	return Field{fmt.Sprintf("%q: %d", name, value)}
 }
 
-// FmtInt64 into field
 func FmtInt64(value int64, name string) Field {
 	return Field{fmt.Sprintf("%q: %d", name, value)}
 }
 
-// FmtString into field
 func FmtString(value string, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
-// FmtStrings into field
 func FmtStrings(values []string, name string) Field {
 	f := make([]string, len(values))
 	for i, v := range values {
@@ -131,7 +114,6 @@ func FmtStrings(values []string, name string) Field {
 	return Field{fmt.Sprintf("%q: [\n\t\t%s\n\t]", name, strings.Join(f, ",\n\t\t"))}
 }
 
-// FmtTime into field
 func FmtTime(value time.Time, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value.Format(time.RFC3339Nano))}
 }

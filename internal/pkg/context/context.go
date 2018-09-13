@@ -28,20 +28,16 @@ const (
 	CorrelationIDStartUp    = "START_UP"
 )
 
-// Background new ctx with background correlation ID
 func Background() context.Context {
 	ctx := WithCorrelationID(context.Background(), CorrelationIDBackground)
 	return WithTest(ctx, false)
 }
 
-// StartUp new ctx with start up correlation ID
 func StartUp() context.Context {
 	ctx := WithCorrelationID(context.Background(), CorrelationIDStartUp)
 	return WithTest(ctx, false)
 }
 
-// New ctx with values from existing ctx
-// -> useful for goroutines that should continue even after the parent context has ended
 func New(ctx context.Context) context.Context {
 	c := WithCorrelationID(context.Background(), uuid.New().String())
 	c = WithCorrelationIDAppend(c, CorrelationID(ctx))
@@ -56,7 +52,6 @@ const (
 	keyTest          key = iota
 )
 
-// CorrelationID from ctx
 func CorrelationID(ctx context.Context) string {
 	if v, ok := ctx.Value(keyCorrelationID).(string); ok {
 		return v
@@ -64,12 +59,10 @@ func CorrelationID(ctx context.Context) string {
 	return ""
 }
 
-// WithCorrelationID in new ctx
 func WithCorrelationID(ctx context.Context, correlationID string) context.Context {
 	return context.WithValue(ctx, keyCorrelationID, correlationID)
 }
 
-// WithCorrelationIDAppend in new ctx
 func WithCorrelationIDAppend(ctx context.Context, correlationID string) context.Context {
 	if cID := CorrelationID(ctx); cID != CorrelationIDBackground {
 		correlationID = fmt.Sprintf("%s,%s", cID, correlationID)
@@ -77,7 +70,6 @@ func WithCorrelationIDAppend(ctx context.Context, correlationID string) context.
 	return WithCorrelationID(ctx, correlationID)
 }
 
-// Test from ctx
 func Test(ctx context.Context) bool {
 	if v, ok := ctx.Value(keyTest).(bool); ok {
 		return v
@@ -85,7 +77,6 @@ func Test(ctx context.Context) bool {
 	return false
 }
 
-// WithTest in new ctx
 func WithTest(ctx context.Context, test bool) context.Context {
 	return context.WithValue(ctx, keyTest, test)
 }
