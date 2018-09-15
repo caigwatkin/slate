@@ -14,17 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package routes
 
 import (
-	"slate/internal/app/slate/routes"
-
-	"github.com/go-chi/chi"
+	"net/http"
+	"slate/internal/pkg/http/render"
 )
 
-func (api *Client) loadEndpoints(pathForHealthEndpoint string) {
-	api.router.Get(pathForHealthEndpoint, routes.Health(api.serviceName))
-	api.router.Route("/hello-world", func(router chi.Router) {
-		router.Get("/", routes.ReadHelloWorld())
-	})
+func Health(serviceName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		render.Health(r.Context(), w, serviceName)
+	}
 }

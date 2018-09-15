@@ -14,27 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package routes
+package render
 
 import (
-	"encoding/json"
-	"net/http"
-	"slate/internal/pkg/http/render"
-	"slate/internal/pkg/log"
+	"context"
+	pkg_context "slate/internal/pkg/context"
+	"slate/internal/pkg/http/constants"
 )
 
-func Ping() http.HandlerFunc {
+type Headers map[string]string
 
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		log.Info(ctx, "Pinging")
-
-		b, err := json.MarshalIndent(map[string]interface{}{
-			"hello": "world",
-		}, "", "\t")
-		if err != nil {
-			render.ErrorOrStatus(ctx, w, err)
-		}
-		render.ContentJSON(ctx, w, b)
+func DefaultHeaders(ctx context.Context) Headers {
+	headers := Headers{
+		constants.HeaderKeyXSlateCorrelationID: pkg_context.CorrelationID(ctx),
 	}
+	if pkg_context.Test(ctx) {
+		headers[constants.HeaderKeyXSlateTest] = constants.HeaderValXSlateTest
+	}
+	return headers
 }
