@@ -22,23 +22,25 @@ import (
 	"slate/internal/pkg/http/constants"
 	"slate/internal/pkg/log"
 	"strings"
+	"time"
 
 	"github.com/go-chi/chi"
-	chi_middleware "github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/middleware"
 	"github.com/google/uuid"
 )
 
-func Default(r *chi.Mux, requestLoggingExclusionPaths []string) {
-	r.Use(chi_middleware.RequestID)
-	r.Use(chi_middleware.DefaultCompress)
-	r.Use(chi_middleware.Logger)
-	r.Use(chi_middleware.Recoverer)
-	r.Use(chi_middleware.URLFormat)
-	r.Use(populateContext)
-	r.Use(infoLogRequests(requestLoggingExclusionPaths))
+func Default(r *chi.Mux, excludePathsForLogInfoRequests []string) {
+	r.Use(middleware.RequestID)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(time.Second * 30))
+	r.Use(middleware.URLFormat)
+	r.Use(PopulateContext)
+	r.Use(LogInfoRequests(excludePathsForLogInfoRequests))
+	r.Use(middleware.DefaultCompress)
 }
 
-func populateContext(next http.Handler) http.Handler {
+func PopulateContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
 		if v, ok := r.Header[constants.HeaderKeyXSlateCorrelationID]; ok {
@@ -53,12 +55,12 @@ func populateContext(next http.Handler) http.Handler {
 	})
 }
 
-func infoLogRequests(exclusionPaths []string) func(next http.Handler) http.Handler {
+func LogInfoRequests(excludePaths []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			url := r.URL.String()
 			var exclude bool
-			for _, v := range exclusionPaths {
+			for _, v := range excludePaths {
 				if url == v {
 					exclude = true
 					break
