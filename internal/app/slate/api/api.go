@@ -31,6 +31,7 @@ type Client struct {
 	config        Config
 	secretsClient *secrets.Client
 	router        *chi.Mux
+	serviceName   string
 }
 
 type Config struct {
@@ -44,14 +45,16 @@ func NewClient(config Config, secretsClient *secrets.Client) Client {
 		config:        config,
 		secretsClient: secretsClient,
 		router:        chi.NewRouter(),
+		serviceName:   "slate",
 	}
-	apiClient.loadMiddleware()
-	apiClient.loadEndpoints()
+	pathForHealthEndpoint := "/health"
+	apiClient.loadMiddleware(pathForHealthEndpoint)
+	apiClient.loadEndpoints(pathForHealthEndpoint)
 	return apiClient
 }
 
-func (api *Client) loadMiddleware() {
-	middleware.Default(api.router, nil)
+func (api Client) loadMiddleware(pathForHealthEndpoint string) {
+	middleware.Default(api.router, []string{pathForHealthEndpoint})
 }
 
 func (api Client) ListenAndServe(ctx context.Context) error {

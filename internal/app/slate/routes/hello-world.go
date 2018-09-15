@@ -14,17 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package routes
 
 import (
-	"slate/internal/app/slate/routes"
-
-	"github.com/go-chi/chi"
+	"encoding/json"
+	"net/http"
+	"slate/internal/pkg/http/render"
+	"slate/internal/pkg/log"
 )
 
-func (api *Client) loadEndpoints(pathForHealthEndpoint string) {
-	api.router.Get(pathForHealthEndpoint, routes.Health(api.serviceName))
-	api.router.Route("/hello-world", func(router chi.Router) {
-		router.Get("/", routes.ReadHelloWorld())
-	})
+func ReadHelloWorld() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log.Info(ctx, "Reading")
+
+		b, err := json.MarshalIndent(map[string]string{
+			"hello": "world",
+		}, "", "\t")
+		if err != nil {
+			render.ErrorOrStatus(ctx, w, err)
+		}
+		render.ContentJSON(ctx, w, b)
+	}
 }
