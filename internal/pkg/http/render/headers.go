@@ -19,17 +19,17 @@ package render
 import (
 	"context"
 	pkg_context "slate/internal/pkg/context"
-	"slate/internal/pkg/http/constants"
+	"slate/internal/pkg/http/headers"
 )
 
 type Headers map[string]string
 
 func DefaultHeaders(ctx context.Context) Headers {
-	headers := Headers{
-		constants.HeaderKeyXSlateCorrelationID: pkg_context.CorrelationID(ctx),
+	h := Headers{
+		headers.KeyXCorrelationID: pkg_context.CorrelationID(ctx),
 	}
 	if pkg_context.Test(ctx) {
-		headers[constants.HeaderKeyXSlateTest] = constants.HeaderValXSlateTest
+		h[headers.KeyXTest] = headers.ValXTest
 	}
-	return headers
+	return h
 }
