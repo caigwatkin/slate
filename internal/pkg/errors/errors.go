@@ -34,9 +34,6 @@ func Errorf(format string, args ...interface{}) error {
 //
 // If err is a Status, it will not be wrapped
 func Wrap(err error, message string) error {
-	// if err == nil {
-	// 	return nil
-	// }
 	if IsStatus(err) {
 		return err
 	}
@@ -47,10 +44,7 @@ func Wrap(err error, message string) error {
 //
 // If err is a Status, it will not be wrapped
 func Wrapf(err error, format string, args ...interface{}) error {
-	// if err == nil {
-	// 	return nil
-	// }
-	if _, ok := err.(Status); ok {
+	if IsStatus(err) {
 		return err
 	}
 	return errors.Wrapf(err, format, args...)

@@ -41,9 +41,9 @@ type client struct {
 //
 // Service name should be in canonical case as it is used for custom response headers
 // Use an empty string to use default keys
-func NewClient(serviceName string) Client {
+func NewClient(serviceNameForHeaders string) Client {
 	return client{
-		headersClient: headers.NewClient(serviceName),
+		headersClient: headers.NewClient(serviceNameForHeaders),
 	}
 }
 

@@ -52,12 +52,16 @@ func NewStatusWithMetadata(code int, message string, metadata map[string]interfa
 
 func newStatus(atSkip, code int, message string, metadata map[string]interface{}) Status {
 	pc, _, lineNumber, _ := runtime.Caller(atSkip + 1)
-	return Status{
+	s := Status{
 		At:       fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineNumber),
 		Code:     code,
-		Message:  fmt.Sprintf("%s: %s", http.StatusText(code), message),
+		Message:  http.StatusText(code),
 		Metadata: metadata,
 	}
+	if message != "" {
+		s.Message = fmt.Sprintf("%s: %s", s.Message, message)
+	}
+	return s
 }
 
 // StatusCode returns the Status code if err is a Status, zero if err is not a Status
@@ -96,7 +100,7 @@ func (s Status) Render() []byte {
 			v["metadata"] = s.Metadata
 		}
 	}
-	b, err := json.Marshal(v)
+	b, err := json.MarshalIndent(v, "", "\t")
 	if err != nil {
 		return nil
 	}

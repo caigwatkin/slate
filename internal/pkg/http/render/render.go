@@ -24,6 +24,7 @@ import (
 	"slate/internal/pkg/http/headers"
 )
 
+// ContentJSON writes JSON bytes to the response writer with status code OK
 func ContentJSON(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, body []byte) {
 	headers := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
@@ -39,6 +40,9 @@ func ContentJSON(ctx context.Context, headersClient headers.Client, w http.Respo
 	logInfoResponse(ctx, code, headers, lenBody, nil)
 }
 
+// ContentJSON writes a small JSON body to the response writer with status code OK
+//
+// Used for health check endpoints to ensure API is serving
 func Health(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, serviceName string) {
 	headers := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
@@ -62,6 +66,7 @@ func Health(ctx context.Context, headersClient headers.Client, w http.ResponseWr
 	}
 }
 
+// Status writes a errors.Status as JSON to the response writer with status code Status.Code
 func Status(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, s errors.Status) {
 	h := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
@@ -76,6 +81,7 @@ func Status(ctx context.Context, headersClient headers.Client, w http.ResponseWr
 	logInfoResponse(ctx, s.Code, h, lenBody, body)
 }
 
+// ErrorOrStatus wraps Status if error is a Status, otherwise writes status code Internal Server Error
 func ErrorOrStatus(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, err error) {
 	if v, ok := err.(errors.Status); ok {
 		Status(ctx, headersClient, w, v)
