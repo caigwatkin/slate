@@ -19,11 +19,11 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
-	"slate/internal/pkg/http/render"
+	pkg_http "slate/internal/pkg/http"
 	"slate/internal/pkg/log"
 )
 
-func ReadHelloWorld() http.HandlerFunc {
+func ReadHelloWorld(httpClient pkg_http.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log.Info(ctx, "Reading")
@@ -32,8 +32,8 @@ func ReadHelloWorld() http.HandlerFunc {
 			"hello": "world",
 		}, "", "\t")
 		if err != nil {
-			render.ErrorOrStatus(ctx, w, err)
+			httpClient.RenderErrorOrStatus(ctx, w, err)
 		}
-		render.ContentJSON(ctx, w, b)
+		httpClient.RenderContentJSON(ctx, w, b)
 	}
 }

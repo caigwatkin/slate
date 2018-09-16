@@ -20,15 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"slate/internal/pkg/http/headers"
 	pkg_httpstatus "slate/internal/pkg/http/status"
 )
 
-func ContentJSON(ctx context.Context, w http.ResponseWriter, body []byte) {
-	headers := DefaultHeaders(ctx)
-	headers["Content-Type"] = "application/json"
-	for k, v := range headers {
-		w.Header().Set(k, v)
-	}
+func ContentJSON(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, body []byte) {
+	headers := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
+		"Content-Type": "application/json",
+	})
 	body = append(body, byte('\n'))
 	code := http.StatusOK
 	w.WriteHeader(code)
@@ -40,12 +39,10 @@ func ContentJSON(ctx context.Context, w http.ResponseWriter, body []byte) {
 	logInfoResponse(ctx, code, headers, lenBody, nil)
 }
 
-func Health(ctx context.Context, w http.ResponseWriter, serviceName string) {
-	headers := DefaultHeaders(ctx)
-	headers["Content-Type"] = "application/json"
-	for k, v := range headers {
-		w.Header().Set(k, v)
-	}
+func Health(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, serviceName string) {
+	headers := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
+		"Content-Type": "application/json",
+	})
 	body, err := json.MarshalIndent(map[string]string{
 		"service": serviceName,
 		"status":  "OK",
@@ -65,32 +62,27 @@ func Health(ctx context.Context, w http.ResponseWriter, serviceName string) {
 	}
 }
 
-func Status(ctx context.Context, w http.ResponseWriter, s pkg_httpstatus.Status) {
-	headers := DefaultHeaders(ctx)
-	headers["Content-Type"] = "application/json"
-	for k, v := range headers {
-		w.Header().Set(k, v)
-	}
+func Status(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, s pkg_httpstatus.Status) {
+	h := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
+		"Content-Type": "application/json",
+	})
 	body := s.Render()
 	w.WriteHeader(s.Code)
 	lenBody, err := w.Write(body)
 	if err != nil {
-		logErrorWritingBody(ctx, s.Code, headers, body)
+		logErrorWritingBody(ctx, s.Code, h, body)
 		return
 	}
-	logInfoResponse(ctx, s.Code, headers, lenBody, body)
+	logInfoResponse(ctx, s.Code, h, lenBody, body)
 }
 
-func ErrorOrStatus(ctx context.Context, w http.ResponseWriter, err error) {
+func ErrorOrStatus(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, err error) {
 	if v, ok := err.(pkg_httpstatus.Status); ok {
-		Status(ctx, w, v)
+		Status(ctx, headersClient, w, v)
 		return
 	}
-	headers := DefaultHeaders(ctx)
-	for k, v := range headers {
-		w.Header().Set(k, v)
-	}
+	h := setHeadersInclDefaults(ctx, headersClient, w, nil)
 	code := http.StatusInternalServerError
 	w.WriteHeader(code)
-	logInfoResponse(ctx, code, headers, 0, nil)
+	logInfoResponse(ctx, code, h, 0, nil)
 }

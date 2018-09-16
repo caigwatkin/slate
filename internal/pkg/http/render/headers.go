@@ -18,18 +18,23 @@ package render
 
 import (
 	"context"
+	"net/http"
 	pkg_context "slate/internal/pkg/context"
-	"slate/internal/pkg/http/headers"
+	pkg_headers "slate/internal/pkg/http/headers"
 )
 
-type Headers map[string]string
-
-func DefaultHeaders(ctx context.Context) Headers {
-	h := Headers{
-		headers.KeyXCorrelationID: pkg_context.CorrelationID(ctx),
+func setHeadersInclDefaults(ctx context.Context, headersClient pkg_headers.Client, w http.ResponseWriter, headers map[string]string) map[string]string {
+	h := map[string]string{
+		headersClient.CorrelationIDKey(): pkg_context.CorrelationID(ctx),
 	}
 	if pkg_context.Test(ctx) {
-		h[headers.KeyXTest] = headers.ValXTest
+		h[headersClient.TestKey()] = pkg_headers.TestValDefault
+	}
+	for k, v := range headers {
+		h[k] = v
+	}
+	for k, v := range h {
+		w.Header().Set(k, v)
 	}
 	return h
 }

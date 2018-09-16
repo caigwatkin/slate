@@ -18,43 +18,61 @@ package headers
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/fatih/camelcase"
 )
 
-var (
-	KeyXCorrelationID = "X-Correlation-Id"
-	KeyXTest          = "X-Test"
+// Client interface
+type Client interface {
+	CorrelationIDKey() string
+	TestKey() string
+}
 
-	ValXTest = "5c1bca85-9e09-4af4-96ac-7f353265838c" // This can be stored and used unencrypted, as anything running in test mode should be safe enough that it doesn't matter who knows it
+type client struct {
+	correlationIDKey string
+	testKey          string
+}
+
+const (
+	correlationIDKeyDefault = "X-Correlation-Id"
+	correlationIDKeyFormat  = "X-%s-Correlation-Id"
+
+	testKeyDefault = "X-Test"
+	testKeyFormat  = "X-%s-Test"
+	TestValDefault = "5c1bca85-9e09-4af4-96ac-7f353265838c" // This can be stored and used unencrypted, as anything running in test mode should be safe enough that it doesn't matter who knows it
 )
 
-func SetKeyXCorrelationID(serviceNameInCamelCase string) {
-	if serviceNameInCamelCase != "" {
-		KeyXCorrelationID = fmt.Sprintf("X-%s-Correlation-Id", camelToCanonical(serviceNameInCamelCase))
+// NewClient with defaults
+//
+// Service name should be in canonical case
+// Use an empty string to use default keys
+func NewClient(serviceName string) Client {
+	var c client
+	c.setCorrelationIDKey(serviceName)
+	c.setTestKey(serviceName)
+	return &c
+}
+
+// CorrelationIDKey returns the correlation ID header key
+func (c client) CorrelationIDKey() string {
+	return c.correlationIDKey
+}
+
+func (c *client) setCorrelationIDKey(serviceName string) {
+	if serviceName == "" {
+		c.correlationIDKey = correlationIDKeyDefault
 		return
 	}
-	KeyXCorrelationID = "X-Correlation-Id"
+	c.correlationIDKey = fmt.Sprintf(correlationIDKeyFormat, serviceName)
 }
 
-func SetKeyXTest(serviceNameInCamelCase string) {
-	if serviceNameInCamelCase != "" {
-		KeyXTest = fmt.Sprintf("X-%s-Test", camelToCanonical(serviceNameInCamelCase))
+// TestKey returns the test header key
+func (c client) TestKey() string {
+	return c.testKey
+}
+
+func (c *client) setTestKey(serviceName string) {
+	if serviceName == "" {
+		c.testKey = testKeyDefault
 		return
 	}
-	KeyXTest = "X-Test"
-}
-
-func SetValXTest(val string) {
-	ValXTest = val
-}
-
-func camelToCanonical(s string) string {
-	words := camelcase.Split(s)
-	for i, v := range words {
-		lv := strings.ToLower(v)
-		words[i] = strings.ToUpper(lv[:1]) + lv[1:]
-	}
-	return strings.Join(words, "-")
+	c.testKey = fmt.Sprintf(testKeyFormat, serviceName)
 }

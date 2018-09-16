@@ -18,11 +18,11 @@ package routes
 
 import (
 	"net/http"
-	"slate/internal/pkg/http/render"
+	pkg_http "slate/internal/pkg/http"
 )
 
-func Health(serviceName string) http.HandlerFunc {
+func Health(httpClient pkg_http.Client, serviceName string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		render.Health(r.Context(), w, serviceName)
+		httpClient.RenderHealth(r.Context(), w, serviceName)
 	}
 }
