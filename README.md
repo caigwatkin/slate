@@ -6,4 +6,4 @@
 [![GolangCI](https://golangci.com/badges/github.com/caigwatkin/slate.svg)](https://golangci.com)
 [![Go Report Card](https://goreportcard.com/badge/github.com/caigwatkin/slate)](https://goreportcard.com/report/github.com/caigwatkin/slate)
 
-API server written in Go
+A clean slate API server written in Go
