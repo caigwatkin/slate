@@ -22,7 +22,6 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-
 	var data = []struct {
 		desc     string
 		input    string
