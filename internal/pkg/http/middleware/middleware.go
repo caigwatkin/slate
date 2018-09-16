@@ -19,7 +19,7 @@ package middleware
 import (
 	"net/http"
 	pkg_context "slate/internal/pkg/context"
-	"slate/internal/pkg/http/constants"
+	"slate/internal/pkg/http/headers"
 	"slate/internal/pkg/log"
 	"strings"
 	"time"
@@ -43,12 +43,12 @@ func Default(r *chi.Mux, excludePathsForLogInfoRequests []string) {
 func PopulateContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
-		if v, ok := r.Header[constants.HeaderKeyXSlateCorrelationID]; ok {
+		if v, ok := r.Header[headers.KeyXCorrelationID]; ok {
 			ctx = pkg_context.WithCorrelationIDAppend(ctx, strings.Join(v, ","))
 		}
 		var t bool
-		if v, ok := r.Header[constants.HeaderKeyXSlateTest]; ok {
-			t = strings.Join(v, ",") == constants.HeaderValXSlateTest
+		if v, ok := r.Header[headers.KeyXTest]; ok {
+			t = strings.Join(v, ",") == headers.ValXTest
 		}
 		ctx = pkg_context.WithTest(ctx, t)
 		next.ServeHTTP(w, r.WithContext(ctx))

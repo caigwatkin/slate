@@ -2,6 +2,7 @@ module slate
 
 require (
 	cloud.google.com/go v0.27.0 // indirect
+	github.com/fatih/camelcase v1.0.0
 	github.com/go-chi/chi v3.3.3+incompatible
 	github.com/golang/protobuf v1.2.0 // indirect
 	github.com/google/uuid v1.0.0

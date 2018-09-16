@@ -20,7 +20,7 @@ import (
 	"testing"
 )
 
-func TestCheckOtherFaults(t *testing.T) {
+func TestErrorf(t *testing.T) {
 
 	var data = []struct {
 		desc     string
