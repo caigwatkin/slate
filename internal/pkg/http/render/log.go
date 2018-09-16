@@ -22,7 +22,7 @@ import (
 	"slate/internal/pkg/log"
 )
 
-func logErrorMarshallingJSONBody(ctx context.Context, code int, headers Headers) {
+func logErrorMarshallingJSONBody(ctx context.Context, code int, headers map[string]string) {
 	log.Error(ctx, "Failed marshalling JSON for response body",
 		log.FmtInt(code, "status code"),
 		log.FmtString(http.StatusText(code), "status text"),
@@ -30,7 +30,7 @@ func logErrorMarshallingJSONBody(ctx context.Context, code int, headers Headers)
 	)
 }
 
-func logErrorWritingBody(ctx context.Context, code int, headers Headers, body []byte) {
+func logErrorWritingBody(ctx context.Context, code int, headers map[string]string, body []byte) {
 	log.Error(ctx, "Failed writing body to response",
 		log.FmtInt(code, "status code"),
 		log.FmtString(http.StatusText(code), "status text"),
@@ -39,7 +39,7 @@ func logErrorWritingBody(ctx context.Context, code int, headers Headers, body []
 	)
 }
 
-func logInfoResponse(ctx context.Context, code int, headers Headers, lenBody int, body []byte) {
+func logInfoResponse(ctx context.Context, code int, headers map[string]string, lenBody int, body []byte) {
 	log.Info(ctx, "HTTP Response",
 		log.FmtInt(code, "status code"),
 		log.FmtString(http.StatusText(code), "status text"),

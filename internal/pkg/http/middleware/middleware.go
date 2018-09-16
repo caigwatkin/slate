@@ -29,33 +29,36 @@ import (
 	"github.com/google/uuid"
 )
 
-func Default(r *chi.Mux, excludePathsForLogInfoRequests []string) {
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(time.Second * 30))
-	r.Use(middleware.URLFormat)
-	r.Use(PopulateContext)
-	r.Use(LogInfoRequests(excludePathsForLogInfoRequests))
-	r.Use(middleware.DefaultCompress)
+// Defaults adds middleware defaults to the router
+func Defaults(router *chi.Mux, headersClient headers.Client, excludePathsForLogInfoRequests []string) {
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.Timeout(time.Second * 30))
+	router.Use(middleware.URLFormat)
+	router.Use(populateContext(headersClient))
+	router.Use(logInfoRequests(excludePathsForLogInfoRequests))
+	router.Use(middleware.DefaultCompress)
 }
 
-func PopulateContext(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
-		if v, ok := r.Header[headers.KeyXCorrelationID]; ok {
-			ctx = pkg_context.WithCorrelationIDAppend(ctx, strings.Join(v, ","))
-		}
-		var t bool
-		if v, ok := r.Header[headers.KeyXTest]; ok {
-			t = strings.Join(v, ",") == headers.ValXTest
-		}
-		ctx = pkg_context.WithTest(ctx, t)
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+func populateContext(headersClient headers.Client) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
+			if v, ok := r.Header[headersClient.CorrelationIDKey()]; ok {
+				ctx = pkg_context.WithCorrelationIDAppend(ctx, strings.Join(v, ","))
+			}
+			var t bool
+			if v, ok := r.Header[headersClient.TestKey()]; ok {
+				t = strings.Join(v, ",") == headers.TestValDefault
+			}
+			ctx = pkg_context.WithTest(ctx, t)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		})
+	}
 }
 
-func LogInfoRequests(excludePaths []string) func(next http.Handler) http.Handler {
+func logInfoRequests(excludePaths []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			url := r.URL.String()

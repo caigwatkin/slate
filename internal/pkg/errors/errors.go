@@ -17,34 +17,40 @@ limitations under the License.
 package errors
 
 import (
-	http_status "slate/internal/pkg/http/status"
-
 	"github.com/pkg/errors"
 )
 
+// New error with stack trace
 func New(message string) error {
 	return errors.New(message)
 }
 
+// Errorf with stack trace and formatted message
 func Errorf(format string, args ...interface{}) error {
 	return errors.Errorf(format, args...)
 }
 
+// Wrap error with new message
+//
+// If err is a Status, it will not be wrapped
 func Wrap(err error, message string) error {
-	if err == nil {
-		return nil
-	}
-	if _, ok := err.(*http_status.Status); ok {
+	// if err == nil {
+	// 	return nil
+	// }
+	if IsStatus(err) {
 		return err
 	}
 	return errors.Wrap(err, message)
 }
 
+// Wrapf error with new formatted message
+//
+// If err is a Status, it will not be wrapped
 func Wrapf(err error, format string, args ...interface{}) error {
-	if err == nil {
-		return nil
-	}
-	if _, ok := err.(*http_status.Status); ok {
+	// if err == nil {
+	// 	return nil
+	// }
+	if _, ok := err.(Status); ok {
 		return err
 	}
 	return errors.Wrapf(err, format, args...)

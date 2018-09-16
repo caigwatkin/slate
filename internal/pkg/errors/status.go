@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package status
+package errors
 
 import (
 	"encoding/json"
@@ -23,28 +23,36 @@ import (
 	"runtime"
 )
 
+// Status data model
+//
+// Implements error interface
 type Status struct {
-	At       string                 `json:"at,omitempty"`
-	Code     int                    `json:"code,omitempty"`
-	Message  string                 `json:"message,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
+	At       string
+	Code     int
+	Message  string
+	Metadata map[string]interface{}
 }
 
-func NewStatus(code int, message string) *Status {
+// NewStatus with code and message
+func NewStatus(code int, message string) Status {
 	return newStatus(1, code, message, nil)
 }
 
-func NewStatusWithMetadata(code int, message string, metadata map[string]interface{}) *Status {
-	return newStatus(1, code, message, metadata)
-}
-
-func NewStatusf(code int, format string, args ...interface{}) *Status {
+// Statusf with code and formatted message
+func Statusf(code int, format string, args ...interface{}) Status {
 	return newStatus(1, code, fmt.Sprintf(format, args...), nil)
 }
 
-func newStatus(atSkip, code int, message string, metadata map[string]interface{}) *Status {
+// NewStatusWithMetadata with code and message
+//
+// Metadata can be useful to add extra context to the error through
+func NewStatusWithMetadata(code int, message string, metadata map[string]interface{}) Status {
+	return newStatus(1, code, message, metadata)
+}
+
+func newStatus(atSkip, code int, message string, metadata map[string]interface{}) Status {
 	pc, _, lineNumber, _ := runtime.Caller(atSkip + 1)
-	return &Status{
+	return Status{
 		At:       fmt.Sprintf("%s:%d", runtime.FuncForPC(pc).Name(), lineNumber),
 		Code:     code,
 		Message:  fmt.Sprintf("%s: %s", http.StatusText(code), message),
@@ -52,10 +60,28 @@ func newStatus(atSkip, code int, message string, metadata map[string]interface{}
 	}
 }
 
+// StatusCode returns the Status code if err is a Status, zero if err is not a Status
+func StatusCode(err error) int {
+	if s, ok := err.(Status); ok {
+		return s.Code
+	}
+	return 0
+}
+
+// IsStatus returns true if err is a Status
+func IsStatus(err error) bool {
+	_, ok := err.(Status)
+	return ok
+}
+
+// Error so that Status objects can be treated as errors
 func (s Status) Error() string {
 	return fmt.Sprintf("%q: %q, %q: %q, %q: %q", "code", s.Code, "message", s.Message, "at", s.At)
 }
 
+// Render the status
+//
+// Most status codes do not render their message or metadata content
 func (s Status) Render() []byte {
 	v := map[string]interface{}{
 		"code": s.Code,

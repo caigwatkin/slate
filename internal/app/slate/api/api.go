@@ -19,7 +19,7 @@ package api
 import (
 	"context"
 	"net/http"
-	"slate/internal/pkg/http/middleware"
+	pkg_http "slate/internal/pkg/http"
 	"slate/internal/pkg/log"
 	"slate/internal/pkg/secrets"
 
@@ -29,6 +29,7 @@ import (
 
 type Client struct {
 	config        Config
+	httpClient    pkg_http.Client
 	secretsClient *secrets.Client
 	router        *chi.Mux
 	serviceName   string
@@ -40,9 +41,10 @@ type Config struct {
 	Port         string
 }
 
-func NewClient(config Config, secretsClient *secrets.Client) Client {
+func NewClient(config Config, httpClient pkg_http.Client, secretsClient *secrets.Client) Client {
 	apiClient := Client{
 		config:        config,
+		httpClient:    httpClient,
 		secretsClient: secretsClient,
 		router:        chi.NewRouter(),
 		serviceName:   "slate",
@@ -54,7 +56,7 @@ func NewClient(config Config, secretsClient *secrets.Client) Client {
 }
 
 func (api Client) loadMiddleware(pathForHealthEndpoint string) {
-	middleware.Default(api.router, []string{pathForHealthEndpoint})
+	api.httpClient.MiddlewareDefaults(api.router, []string{pathForHealthEndpoint})
 }
 
 func (api Client) ListenAndServe(ctx context.Context) error {

@@ -22,6 +22,7 @@ import (
 	"os"
 	"slate/internal/app/slate/api"
 	"slate/internal/pkg/context"
+	"slate/internal/pkg/http"
 	"slate/internal/pkg/log"
 	"slate/internal/pkg/secrets"
 )
@@ -31,6 +32,7 @@ var (
 	env          string
 	gcpProjectID string
 	port         int
+	serviceName  string
 )
 
 func init() {
@@ -38,6 +40,7 @@ func init() {
 	flag.StringVar(&env, "env", "dev", "Deployment environment")
 	flag.StringVar(&gcpProjectID, "gcp_project_id", "slate-00", "GCP project ID")
 	flag.IntVar(&port, "port", 8080, "Port")
+	flag.StringVar(&serviceName, "service_name", "Slate", "GCP project ID")
 	flag.Parse()
 }
 
@@ -60,12 +63,16 @@ func main() {
 	}
 	log.Info(ctx, "Created secrets client")
 
+	log.Info(ctx, "Creating http client")
+	httpClient := http.NewClient("Slate")
+	log.Info(ctx, "Created http client")
+
 	log.Info(ctx, "Creating API client")
 	apiClient := api.NewClient(api.Config{
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
-	}, secretsClient)
+	}, httpClient, secretsClient)
 	log.Info(ctx, "Created API client")
 
 	if err := apiClient.ListenAndServe(ctx); err != nil {

@@ -21,8 +21,96 @@ import (
 	"testing"
 )
 
-func TestSetKeyXCorrelationID(t *testing.T) {
+func TestNewClient(t *testing.T) {
 
+	var data = []struct {
+		desc     string
+		input    string
+		expected client
+	}{
+		{
+			desc:  "defaults",
+			input: "",
+			expected: client{
+				correlationIDKey: correlationIDKeyDefault,
+				testKey:          testKeyDefault,
+			},
+		},
+
+		{
+			desc:  "service",
+			input: "Service-Name",
+			expected: client{
+				correlationIDKey: "X-Service-Name-Correlation-Id",
+				testKey:          "X-Service-Name-Test",
+			},
+		},
+	}
+
+	for i, d := range data {
+		result := NewClient(d.input)
+
+		if result.CorrelationIDKey() != d.expected.correlationIDKey {
+			t.Error(pkg_testing.Errorf(pkg_testing.Error{
+				Unexpected: "result.CorrelationIDKey()",
+				Desc:       d.desc,
+				At:         i,
+				Expected:   d.expected.correlationIDKey,
+				Result:     result.CorrelationIDKey(),
+			}))
+		}
+		if result.TestKey() != d.expected.testKey {
+			t.Error(pkg_testing.Errorf(pkg_testing.Error{
+				Unexpected: "result.TestKey()",
+				Desc:       d.desc,
+				At:         i,
+				Expected:   d.expected.testKey,
+				Result:     result.TestKey(),
+			}))
+		}
+	}
+}
+
+func TestCorrelationIDKey(t *testing.T) {
+	var data = []struct {
+		desc     string
+		input    client
+		expected string
+	}{
+		{
+			desc: "default",
+			input: client{
+				correlationIDKey: correlationIDKeyDefault,
+			},
+			expected: correlationIDKeyDefault,
+		},
+
+		{
+			desc: "foo",
+			input: client{
+				correlationIDKey: "foo",
+			},
+			expected: "foo",
+		},
+	}
+
+	for i, d := range data {
+		result := d.input.CorrelationIDKey()
+
+		if result != d.expected {
+			t.Error(pkg_testing.Errorf(pkg_testing.Error{
+				Unexpected: "result",
+				Desc:       d.desc,
+				At:         i,
+				Input:      d.input,
+				Expected:   d.expected,
+				Result:     result,
+			}))
+		}
+	}
+}
+
+func TestSetCorrelationIDKey(t *testing.T) {
 	var data = []struct {
 		desc     string
 		input    string
@@ -30,7 +118,7 @@ func TestSetKeyXCorrelationID(t *testing.T) {
 	}{
 		{
 			desc:     "not empty service name",
-			input:    "ServiceName",
+			input:    "Service-Name",
 			expected: "X-Service-Name-Correlation-Id",
 		},
 
@@ -42,8 +130,9 @@ func TestSetKeyXCorrelationID(t *testing.T) {
 	}
 
 	for i, d := range data {
-		SetKeyXCorrelationID(d.input)
-		result := KeyXCorrelationID
+		c := client{}
+		c.setCorrelationIDKey(d.input)
+		result := c.correlationIDKey
 
 		if result != d.expected {
 			t.Error(pkg_testing.Errorf(pkg_testing.Error{
@@ -58,8 +147,46 @@ func TestSetKeyXCorrelationID(t *testing.T) {
 	}
 }
 
-func TestSetKeyXTest(t *testing.T) {
+func TestTestKey(t *testing.T) {
+	var data = []struct {
+		desc     string
+		input    client
+		expected string
+	}{
+		{
+			desc: "default",
+			input: client{
+				testKey: testKeyDefault,
+			},
+			expected: testKeyDefault,
+		},
 
+		{
+			desc: "foo",
+			input: client{
+				testKey: "foo",
+			},
+			expected: "foo",
+		},
+	}
+
+	for i, d := range data {
+		result := d.input.TestKey()
+
+		if result != d.expected {
+			t.Error(pkg_testing.Errorf(pkg_testing.Error{
+				Unexpected: "result",
+				Desc:       d.desc,
+				At:         i,
+				Input:      d.input,
+				Expected:   d.expected,
+				Result:     result,
+			}))
+		}
+	}
+}
+
+func TestSetTestKey(t *testing.T) {
 	var data = []struct {
 		desc     string
 		input    string
@@ -67,7 +194,7 @@ func TestSetKeyXTest(t *testing.T) {
 	}{
 		{
 			desc:     "not empty service name",
-			input:    "ServiceName",
+			input:    "Service-Name",
 			expected: "X-Service-Name-Test",
 		},
 
@@ -79,105 +206,9 @@ func TestSetKeyXTest(t *testing.T) {
 	}
 
 	for i, d := range data {
-		SetKeyXTest(d.input)
-		result := KeyXTest
-
-		if result != d.expected {
-			t.Error(pkg_testing.Errorf(pkg_testing.Error{
-				Unexpected: "result",
-				Desc:       d.desc,
-				At:         i,
-				Input:      d.input,
-				Expected:   d.expected,
-				Result:     result,
-			}))
-		}
-	}
-}
-
-func TestSetValXTest(t *testing.T) {
-
-	var data = []struct {
-		desc     string
-		input    string
-		expected string
-	}{
-		{
-			desc:     "not empty val",
-			input:    "SomeValue-xXxXx",
-			expected: "SomeValue-xXxXx",
-		},
-
-		{
-			desc:     "empty val",
-			input:    "",
-			expected: "",
-		},
-	}
-
-	for i, d := range data {
-		SetValXTest(d.input)
-		result := ValXTest
-
-		if result != d.expected {
-			t.Error(pkg_testing.Errorf(pkg_testing.Error{
-				Unexpected: "result",
-				Desc:       d.desc,
-				At:         i,
-				Input:      d.input,
-				Expected:   d.expected,
-				Result:     result,
-			}))
-		}
-	}
-}
-
-func TestCamelToCanonical(t *testing.T) {
-
-	var data = []struct {
-		desc     string
-		input    string
-		expected string
-	}{
-		{
-			desc:     "one character",
-			input:    "S",
-			expected: "S",
-		},
-
-		{
-			desc:     "camel case one word",
-			input:    "Service",
-			expected: "Service",
-		},
-
-		{
-			desc:     "camel case two words",
-			input:    "ServiceName",
-			expected: "Service-Name",
-		},
-
-		{
-			desc:     "camel case acronym one word",
-			input:    "API",
-			expected: "Api",
-		},
-
-		{
-			desc:     "camel case acronym two words",
-			input:    "APIName",
-			expected: "Api-Name",
-		},
-
-		{
-			desc:     "empty string",
-			input:    "",
-			expected: "",
-		},
-	}
-
-	for i, d := range data {
-		result := camelToCanonical(d.input)
+		c := client{}
+		c.setTestKey(d.input)
+		result := c.testKey
 
 		if result != d.expected {
 			t.Error(pkg_testing.Errorf(pkg_testing.Error{
