@@ -20,8 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"slate/internal/pkg/errors"
 	"slate/internal/pkg/http/headers"
-	pkg_httpstatus "slate/internal/pkg/http/status"
 )
 
 func ContentJSON(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, body []byte) {
@@ -62,7 +62,7 @@ func Health(ctx context.Context, headersClient headers.Client, w http.ResponseWr
 	}
 }
 
-func Status(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, s pkg_httpstatus.Status) {
+func Status(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, s errors.Status) {
 	h := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
 	})
@@ -77,7 +77,7 @@ func Status(ctx context.Context, headersClient headers.Client, w http.ResponseWr
 }
 
 func ErrorOrStatus(ctx context.Context, headersClient headers.Client, w http.ResponseWriter, err error) {
-	if v, ok := err.(pkg_httpstatus.Status); ok {
+	if v, ok := err.(errors.Status); ok {
 		Status(ctx, headersClient, w, v)
 		return
 	}

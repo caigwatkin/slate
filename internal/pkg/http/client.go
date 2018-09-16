@@ -39,7 +39,7 @@ type client struct {
 
 // NewClient for http
 //
-// Service name should be in canonical case
+// Service name should be in canonical case as it is used for custom response headers
 // Use an empty string to use default keys
 func NewClient(serviceName string) Client {
 	return client{

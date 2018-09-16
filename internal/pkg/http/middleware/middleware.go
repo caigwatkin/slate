@@ -29,18 +29,19 @@ import (
 	"github.com/google/uuid"
 )
 
-func Defaults(r *chi.Mux, headersClient headers.Client, excludePathsForLogInfoRequests []string) {
-	r.Use(middleware.RequestID)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(time.Second * 30))
-	r.Use(middleware.URLFormat)
-	r.Use(PopulateContext(headersClient))
-	r.Use(LogInfoRequests(excludePathsForLogInfoRequests))
-	r.Use(middleware.DefaultCompress)
+// Defaults adds middleware defaults to the router
+func Defaults(router *chi.Mux, headersClient headers.Client, excludePathsForLogInfoRequests []string) {
+	router.Use(middleware.RequestID)
+	router.Use(middleware.Logger)
+	router.Use(middleware.Recoverer)
+	router.Use(middleware.Timeout(time.Second * 30))
+	router.Use(middleware.URLFormat)
+	router.Use(populateContext(headersClient))
+	router.Use(logInfoRequests(excludePathsForLogInfoRequests))
+	router.Use(middleware.DefaultCompress)
 }
 
-func PopulateContext(headersClient headers.Client) func(next http.Handler) http.Handler {
+func populateContext(headersClient headers.Client) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
@@ -57,7 +58,7 @@ func PopulateContext(headersClient headers.Client) func(next http.Handler) http.
 	}
 }
 
-func LogInfoRequests(excludePaths []string) func(next http.Handler) http.Handler {
+func logInfoRequests(excludePaths []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			url := r.URL.String()
