@@ -38,46 +38,47 @@ var (
 func init() {
 	flag.BoolVar(&debug, "debug", true, "Debug mode on/off")
 	flag.StringVar(&env, "env", "dev", "Deployment environment")
-	flag.StringVar(&gcpProjectID, "gcp_project_id", "slate-00", "GCP project ID")
+	flag.StringVar(&gcpProjectID, "gcpProjectID", "slate-00", "GCP project ID")
 	flag.IntVar(&port, "port", 8080, "Port")
-	flag.StringVar(&serviceName, "service_name", "Slate", "GCP project ID")
+	flag.StringVar(&serviceName, "serviceName", "Slate", "Service name in canonical case for header")
 	flag.Parse()
 }
 
 func main() {
 	ctx := context.StartUp()
 
-	log.Init(debug)
-	log.Info(ctx, "Logger initialised",
+	logClient := log.NewClient(debug)
+	logClient.Info(ctx, "Logger initialised",
 		log.FmtBool(debug, "debug"),
 		log.FmtString(env, "env"),
 		log.FmtString(gcpProjectID, "gcpProjectID"),
 		log.FmtInt(port, "port"),
+		log.FmtString(serviceName, "serviceName"),
 		log.FmtStrings(os.Environ(), "os.Environ()"),
 	)
 
-	log.Info(ctx, "Creating secrets client")
+	logClient.Info(ctx, "Creating secrets client")
 	secretsClient, err := secrets.NewClient(ctx)
 	if err != nil {
-		log.Fatal(ctx, "Failed creating secrets client", log.FmtError(err))
+		logClient.Fatal(ctx, "Failed creating secrets client", log.FmtError(err))
 	}
-	log.Info(ctx, "Created secrets client")
+	logClient.Info(ctx, "Created secrets client")
 
-	log.Info(ctx, "Creating http client")
-	httpClient := http.NewClient("Slate")
-	log.Info(ctx, "Created http client")
+	logClient.Info(ctx, "Creating http client")
+	httpClient := http.NewClient(logClient, "Slate")
+	logClient.Info(ctx, "Created http client")
 
-	log.Info(ctx, "Creating API client")
+	logClient.Info(ctx, "Creating API client")
 	apiClient := api.NewClient(api.Config{
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
-	}, httpClient, secretsClient)
-	log.Info(ctx, "Created API client")
+	}, httpClient, logClient, secretsClient)
+	logClient.Info(ctx, "Created API client")
 
 	if err := apiClient.ListenAndServe(ctx); err != nil {
-		log.Fatal(ctx, "Slate client unexpectedly returned with error from listening and serving; terminating", log.FmtError(err))
+		logClient.Fatal(ctx, "Slate client unexpectedly returned with error from listening and serving; terminating", log.FmtError(err))
 		return
 	}
-	log.Fatal(ctx, "Slate client unexpectedly returned from listening and serving; terminating")
+	logClient.Fatal(ctx, "Slate client unexpectedly returned from listening and serving; terminating")
 }

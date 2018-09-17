@@ -30,14 +30,14 @@ import (
 )
 
 // Defaults adds middleware defaults to the router
-func Defaults(router *chi.Mux, headersClient headers.Client, excludePathsForLogInfoRequests []string) {
+func Defaults(router *chi.Mux, headersClient headers.Client, logClient log.Client, excludePathsForLogInfoRequests []string) {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.Timeout(time.Second * 30))
 	router.Use(middleware.URLFormat)
 	router.Use(populateContext(headersClient))
-	router.Use(logInfoRequests(excludePathsForLogInfoRequests))
+	router.Use(logInfoRequests(logClient, excludePathsForLogInfoRequests))
 	router.Use(middleware.DefaultCompress)
 }
 
@@ -58,7 +58,7 @@ func populateContext(headersClient headers.Client) func(next http.Handler) http.
 	}
 }
 
-func logInfoRequests(excludePaths []string) func(next http.Handler) http.Handler {
+func logInfoRequests(logClient log.Client, excludePaths []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			url := r.URL.String()
@@ -70,7 +70,7 @@ func logInfoRequests(excludePaths []string) func(next http.Handler) http.Handler
 				}
 			}
 			if !exclude {
-				log.Info(r.Context(), "HTTP Request",
+				logClient.Info(r.Context(), "HTTP Request",
 					log.FmtString(r.URL.String(), "URL"),
 					log.FmtString(r.Method, "Method"),
 					log.FmtAny(r.Header, "Header"),

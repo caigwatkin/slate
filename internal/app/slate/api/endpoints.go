@@ -25,6 +25,6 @@ import (
 func (api *Client) loadEndpoints(pathForHealthEndpoint string) {
 	api.router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
 	api.router.Route("/hello-world", func(router chi.Router) {
-		router.Get("/", routes.ReadHelloWorld(api.httpClient))
+		router.Get("/", routes.ReadHelloWorld(api.httpClient, api.logClient))
 	})
 }

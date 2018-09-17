@@ -28,84 +28,125 @@ import (
 	"time"
 )
 
-func Init(debug bool) {
-	l.debug = debug
+type Client interface {
+	Debug(ctx context.Context, message string, fields ...Field)
+	Info(ctx context.Context, message string, fields ...Field)
+	Warn(ctx context.Context, message string, fields ...Field)
+	Error(ctx context.Context, message string, fields ...Field)
+	Fatal(ctx context.Context, message string, fields ...Field)
 }
 
+type client struct {
+	debug       bool
+	loggerDebug *log.Logger
+	loggerInfo  *log.Logger
+	loggerWarn  *log.Logger
+	loggerError *log.Logger
+	loggerFatal *log.Logger
+}
+
+// NewClient for logging
+func NewClient(enableDebug bool) Client {
+	return client{
+		debug:       enableDebug,
+		loggerDebug: log.New(os.Stdout, fmt.Sprintf("\x1b[%dmDEBUG ", green), log.Ldate|log.Ltime|log.Lmicroseconds),
+		loggerInfo:  log.New(os.Stdout, fmt.Sprintf("\x1b[%dmINFO  ", cyan), log.Ldate|log.Ltime|log.Lmicroseconds),
+		loggerWarn:  log.New(os.Stderr, fmt.Sprintf("\x1b[%dmWARN  ", yellow), log.Ldate|log.Ltime|log.Lmicroseconds),
+		loggerError: log.New(os.Stderr, fmt.Sprintf("\x1b[%dmERROR ", red), log.Ldate|log.Ltime|log.Lmicroseconds),
+		loggerFatal: log.New(os.Stderr, fmt.Sprintf("\x1b[%dmFATAL ", red), log.Ldate|log.Ltime|log.Lmicroseconds),
+	}
+}
+
+// Debug log at debug level
+func (c client) Debug(ctx context.Context, message string, fields ...Field) {
+	if c.debug {
+		c.output(ctx, severityDebug, message, fields)
+	}
+}
+
+// Info log at info level
+func (c client) Info(ctx context.Context, message string, fields ...Field) {
+	c.output(ctx, severityInfo, message, fields)
+}
+
+// Warn log at warn level
+func (c client) Warn(ctx context.Context, message string, fields ...Field) {
+	c.output(ctx, severityWarn, message, fields)
+}
+
+// Error log at error level
+func (c client) Error(ctx context.Context, message string, fields ...Field) {
+	c.output(ctx, severityError, message, fields)
+}
+
+// Fatal log at fatal level
+func (c client) Fatal(ctx context.Context, message string, fields ...Field) {
+	c.output(ctx, severityFatal, message, fields)
+}
+
+// Field to log
 type Field struct {
 	s string
 }
 
-func Debug(ctx context.Context, message string, fields ...Field) {
-	if l.debug {
-		output(ctx, severityDebug, message, fields)
-	}
-}
-
-func Info(ctx context.Context, message string, fields ...Field) {
-	output(ctx, severityInfo, message, fields)
-}
-
-func Warn(ctx context.Context, message string, fields ...Field) {
-	output(ctx, severityWarn, message, fields)
-}
-
-func Error(ctx context.Context, message string, fields ...Field) {
-	output(ctx, severityError, message, fields)
-}
-
-func Fatal(ctx context.Context, message string, fields ...Field) {
-	output(ctx, severityFatal, message, fields)
-}
-
+// FmtAny using JSON marshaller with indenting
+//
+// Use this to format for logging any object that can be JSON unmarshalled
+// If JSON unmarshalling fails, the object will be formatted as a verb
 func FmtAny(value interface{}, name string) Field {
 	blob, err := json.MarshalIndent(value, "\t", "\t")
 	if err != nil {
-		message := "Failed encoding value as JSON"
-		pc, _, line, _ := runtime.Caller(0)
-		funcName := runtime.FuncForPC(pc).Name()
-		l.loggerError.Println(fmtLog(pkg_context.CorrelationIDBackground, message, funcName, line, nil))
-		return Field{fmt.Sprintf("%q: %q", name, message)}
+		return Field{fmt.Sprintf("%q: %v", name, value)}
 	}
 	return Field{fmt.Sprintf("%q: %s", name, blob)}
 }
 
+// FmtBool as name/value pair for logging
 func FmtBool(value bool, name string) Field {
 	return Field{fmt.Sprintf("%q: %t", name, value)}
 }
 
+// FmtByte as name/value pair for logging
 func FmtByte(value byte, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
+// FmtBytes as name/value pair for logging
 func FmtBytes(value []byte, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
+// FmtDuration as name/value pair for logging
 func FmtDuration(value time.Duration, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
+// FmtError as name/value pair for logging
 func FmtError(value error) Field {
 	return Field{fmt.Sprintf("%q: {\n\t\t%q: %q,\n\t\t%q: \"%+v\"\n\t}", "error", "friendly", value, "trace", value)}
 }
 
+// FmtFloat64 as name/value pair for logging
 func FmtFloat64(value float64, name string) Field {
 	return Field{fmt.Sprintf("%q: %f", name, value)}
 }
 
+// FmtInt as name/value pair for logging
 func FmtInt(value int, name string) Field {
 	return Field{fmt.Sprintf("%q: %d", name, value)}
 }
 
+// FmtInt64 as name/value pair for logging
 func FmtInt64(value int64, name string) Field {
 	return Field{fmt.Sprintf("%q: %d", name, value)}
 }
 
+// FmtString as name/value pair for logging
 func FmtString(value string, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
 }
 
+// FmtStrings as name/value pair for logging
 func FmtStrings(values []string, name string) Field {
 	f := make([]string, len(values))
 	for i, v := range values {
@@ -114,6 +155,7 @@ func FmtStrings(values []string, name string) Field {
 	return Field{fmt.Sprintf("%q: [\n\t\t%s\n\t]", name, strings.Join(f, ",\n\t\t"))}
 }
 
+// FmtTime as name/value pair for logging
 func FmtTime(value time.Time, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value.Format(time.RFC3339Nano))}
 }
@@ -131,40 +173,21 @@ const (
 	severityFatal = iota
 )
 
-var (
-	l = &logger{
-		loggerDebug: log.New(os.Stdout, fmt.Sprintf("\x1b[%dmDEBUG ", green), log.Ldate|log.Ltime|log.Lmicroseconds),
-		loggerInfo:  log.New(os.Stdout, fmt.Sprintf("\x1b[%dmINFO  ", cyan), log.Ldate|log.Ltime|log.Lmicroseconds),
-		loggerWarn:  log.New(os.Stderr, fmt.Sprintf("\x1b[%dmWARN  ", yellow), log.Ldate|log.Ltime|log.Lmicroseconds),
-		loggerError: log.New(os.Stderr, fmt.Sprintf("\x1b[%dmERROR ", red), log.Ldate|log.Ltime|log.Lmicroseconds),
-		loggerFatal: log.New(os.Stderr, fmt.Sprintf("\x1b[%dmFATAL ", red), log.Ldate|log.Ltime|log.Lmicroseconds),
-	}
-)
-
-type logger struct {
-	debug       bool
-	loggerDebug *log.Logger
-	loggerInfo  *log.Logger
-	loggerWarn  *log.Logger
-	loggerError *log.Logger
-	loggerFatal *log.Logger
-}
-
-func output(ctx context.Context, severity int, message string, fields []Field) {
+func (c client) output(ctx context.Context, severity int, message string, fields []Field) {
 	pc, _, line, _ := runtime.Caller(2)
 	funcName := runtime.FuncForPC(pc).Name()
 	message = fmtLog(pkg_context.CorrelationID(ctx), message, funcName, line, fields)
 	switch severity {
 	case severityDebug:
-		l.loggerDebug.Println(message)
+		c.loggerDebug.Println(message)
 	case severityInfo:
-		l.loggerInfo.Println(message)
+		c.loggerInfo.Println(message)
 	case severityWarn:
-		l.loggerWarn.Println(message)
+		c.loggerWarn.Println(message)
 	case severityError:
-		l.loggerError.Println(message)
+		c.loggerError.Println(message)
 	case severityFatal:
-		l.loggerFatal.Panicln(message)
+		c.loggerFatal.Panicln(message)
 	}
 }
 
