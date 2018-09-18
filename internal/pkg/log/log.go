@@ -106,6 +106,18 @@ func FmtBool(value bool, name string) Field {
 	return Field{fmt.Sprintf("%q: %t", name, value)}
 }
 
+// FmtBools as name/value pair for logging
+func FmtBools(values []bool, name string) Field {
+	if len(values) == 0 {
+		return Field{fmt.Sprintf("%q: []", name)}
+	}
+	f := make([]string, len(values))
+	for i, v := range values {
+		f[i] = fmt.Sprintf("%t", v)
+	}
+	return Field{fmt.Sprintf("%q: [\n\t\t%s\n\t]", name, strings.Join(f, ",\n\t\t"))}
+}
+
 // FmtByte as name/value pair for logging
 func FmtByte(value byte, name string) Field {
 	return Field{fmt.Sprintf("%q: %q", name, value)}
@@ -148,6 +160,9 @@ func FmtString(value string, name string) Field {
 
 // FmtStrings as name/value pair for logging
 func FmtStrings(values []string, name string) Field {
+	if len(values) == 0 {
+		return Field{fmt.Sprintf("%q: []", name)}
+	}
 	f := make([]string, len(values))
 	for i, v := range values {
 		f[i] = fmt.Sprintf("%q", v)
