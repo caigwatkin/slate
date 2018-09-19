@@ -231,3 +231,109 @@ func TestFmtBools(t *testing.T) {
 		}
 	}
 }
+
+func TestFmtByte(t *testing.T) {
+	type input struct {
+		value byte
+		name  string
+	}
+	var data = []struct {
+		desc string
+		input
+		expected string
+	}{
+		{
+			desc: "Character",
+			input: input{
+				value: 'A',
+				name:  "name",
+			},
+			expected: "\"name\": 'A'",
+		},
+
+		{
+			desc: "integer",
+			input: input{
+				value: 0,
+				name:  "name",
+			},
+			expected: "\"name\": '\\x00'",
+		},
+	}
+
+	for i, d := range data {
+		result := FmtByte(d.input.value, d.input.name)
+
+		if result.s != d.expected {
+			t.Error(pkg_testing.Errorf(pkg_testing.Error{
+				Unexpected: "result.s",
+				Desc:       d.desc,
+				At:         i,
+				Expected:   d.expected,
+				Result:     result.s,
+			}))
+		}
+	}
+}
+
+func TestFmtBytes(t *testing.T) {
+	type input struct {
+		value []byte
+		name  string
+	}
+	var data = []struct {
+		desc string
+		input
+		expected string
+	}{
+		{
+			desc: "empty",
+			input: input{
+				value: []byte{},
+				name:  "name",
+			},
+			expected: "\"name\": \"\"",
+		},
+
+		{
+			desc: "string",
+			input: input{
+				value: []byte("some text"),
+				name:  "name",
+			},
+			expected: "\"name\": \"some text\"",
+		},
+
+		{
+			desc: "characters",
+			input: input{
+				value: []byte{'A', 'a', 'B'},
+				name:  "name",
+			},
+			expected: "\"name\": \"AaB\"",
+		},
+
+		{
+			desc: "characters",
+			input: input{
+				value: []byte{0, 25, 18},
+				name:  "name",
+			},
+			expected: "\"name\": \"\\x00\\x19\\x12\"",
+		},
+	}
+
+	for i, d := range data {
+		result := FmtBytes(d.input.value, d.input.name)
+
+		if result.s != d.expected {
+			t.Error(pkg_testing.Errorf(pkg_testing.Error{
+				Unexpected: "result.s",
+				Desc:       d.desc,
+				At:         i,
+				Expected:   d.expected,
+				Result:     result.s,
+			}))
+		}
+	}
+}
