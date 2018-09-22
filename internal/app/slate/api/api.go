@@ -30,6 +30,7 @@ import (
 type Client struct {
 	config        Config
 	httpClient    pkg_http.Client
+	logClient     log.Client
 	secretsClient *secrets.Client
 	router        *chi.Mux
 	serviceName   string
@@ -41,10 +42,11 @@ type Config struct {
 	Port         string
 }
 
-func NewClient(config Config, httpClient pkg_http.Client, secretsClient *secrets.Client) Client {
+func NewClient(config Config, httpClient pkg_http.Client, logClient log.Client, secretsClient *secrets.Client) Client {
 	apiClient := Client{
 		config:        config,
 		httpClient:    httpClient,
+		logClient:     logClient,
 		secretsClient: secretsClient,
 		router:        chi.NewRouter(),
 		serviceName:   "slate",
@@ -60,7 +62,7 @@ func (api Client) loadMiddleware(pathForHealthEndpoint string) {
 }
 
 func (api Client) ListenAndServe(ctx context.Context) error {
-	log.Info(ctx, "Listening and serving", log.FmtString(api.config.Port, "port"))
+	api.logClient.Info(ctx, "Listening and serving", log.FmtString(api.config.Port, "port"))
 
 	if err := http.ListenAndServe(api.config.Port, api.router); err != nil {
 		return errors.Wrap(err, "Failed listening and serving")

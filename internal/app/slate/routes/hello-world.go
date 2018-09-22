@@ -23,10 +23,10 @@ import (
 	"slate/internal/pkg/log"
 )
 
-func ReadHelloWorld(httpClient pkg_http.Client) http.HandlerFunc {
+func ReadHelloWorld(httpClient pkg_http.Client, logClient log.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		log.Info(ctx, "Reading")
+		logClient.Info(ctx, "Reading")
 
 		b, err := json.MarshalIndent(map[string]string{
 			"hello": "world",

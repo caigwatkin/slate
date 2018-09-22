@@ -22,16 +22,16 @@ import (
 	"slate/internal/pkg/log"
 )
 
-func logErrorMarshallingJSONBody(ctx context.Context, code int, headers map[string]string) {
-	log.Error(ctx, "Failed marshalling JSON for response body",
+func logErrorMarshallingJSONBody(ctx context.Context, logClient log.Client, code int, headers map[string]string) {
+	logClient.Error(ctx, "Failed marshalling JSON for response body",
 		log.FmtInt(code, "status code"),
 		log.FmtString(http.StatusText(code), "status text"),
 		log.FmtAny(headers, "headers"),
 	)
 }
 
-func logErrorWritingBody(ctx context.Context, code int, headers map[string]string, body []byte) {
-	log.Error(ctx, "Failed writing body to response",
+func logErrorWritingBody(ctx context.Context, logClient log.Client, code int, headers map[string]string, body []byte) {
+	logClient.Error(ctx, "Failed writing body to response",
 		log.FmtInt(code, "status code"),
 		log.FmtString(http.StatusText(code), "status text"),
 		log.FmtAny(headers, "headers"),
@@ -39,8 +39,8 @@ func logErrorWritingBody(ctx context.Context, code int, headers map[string]strin
 	)
 }
 
-func logInfoResponse(ctx context.Context, code int, headers map[string]string, lenBody int, body []byte) {
-	log.Info(ctx, "HTTP Response",
+func logInfoResponse(ctx context.Context, logClient log.Client, code int, headers map[string]string, lenBody int, body []byte) {
+	logClient.Info(ctx, "HTTP Response",
 		log.FmtInt(code, "status code"),
 		log.FmtString(http.StatusText(code), "status text"),
 		log.FmtAny(headers, "headers"),
