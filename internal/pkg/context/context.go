@@ -23,26 +23,32 @@ import (
 	"github.com/google/uuid"
 )
 
+// Correlation ID enums
 const (
 	CorrelationIDBackground = "BACKGROUND"
 	CorrelationIDStartUp    = "START_UP"
 )
 
+// Background returns a new background context with background correlation ID enum
 func Background() context.Context {
 	ctx := WithCorrelationID(context.Background(), CorrelationIDBackground)
 	return WithTest(ctx, false)
 }
 
+// StartUp returns a new background context with start up correlation ID enum
 func StartUp() context.Context {
 	ctx := WithCorrelationID(context.Background(), CorrelationIDStartUp)
 	return WithTest(ctx, false)
 }
 
+// New context with correlation ID of ctx with newly appended ctx, test value of ctx, and other defaults
 func New(ctx context.Context) context.Context {
 	c := WithCorrelationID(context.Background(), uuid.New().String())
-	c = WithCorrelationIDAppend(c, CorrelationID(ctx))
-	c = WithTest(c, Test(ctx))
-	return WithTest(c, false)
+	if ctx != nil {
+		c = WithCorrelationIDAppend(c, CorrelationID(ctx))
+		c = WithTest(c, Test(ctx))
+	}
+	return c
 }
 
 type key int
@@ -52,6 +58,7 @@ const (
 	keyTest          key = iota
 )
 
+// CorrelationID returns correlation ID value of ctx
 func CorrelationID(ctx context.Context) string {
 	if v, ok := ctx.Value(keyCorrelationID).(string); ok {
 		return v
@@ -59,10 +66,12 @@ func CorrelationID(ctx context.Context) string {
 	return ""
 }
 
+// WithCorrelationID returns a new context with correlation ID value
 func WithCorrelationID(ctx context.Context, correlationID string) context.Context {
 	return context.WithValue(ctx, keyCorrelationID, correlationID)
 }
 
+// WithCorrelationIDAppend returns a new context with correlation ID value appended to existing correlation ID value if one exists
 func WithCorrelationIDAppend(ctx context.Context, correlationID string) context.Context {
 	if cID := CorrelationID(ctx); cID != CorrelationIDBackground {
 		correlationID = fmt.Sprintf("%s,%s", cID, correlationID)
@@ -70,6 +79,7 @@ func WithCorrelationIDAppend(ctx context.Context, correlationID string) context.
 	return WithCorrelationID(ctx, correlationID)
 }
 
+// Test returns test value of ctx
 func Test(ctx context.Context) bool {
 	if v, ok := ctx.Value(keyTest).(bool); ok {
 		return v
@@ -77,6 +87,7 @@ func Test(ctx context.Context) bool {
 	return false
 }
 
+// WithTest returns a new context with test value
 func WithTest(ctx context.Context, test bool) context.Context {
 	return context.WithValue(ctx, keyTest, test)
 }
