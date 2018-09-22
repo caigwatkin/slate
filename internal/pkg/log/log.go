@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"runtime"
 	pkg_context "slate/internal/pkg/context"
 	"strings"
@@ -85,94 +86,205 @@ func (c client) Fatal(ctx context.Context, message string, fields ...Field) {
 }
 
 // Field to log
-type Field struct {
-	s string
-}
+type Field string
 
 // FmtAny using JSON marshaller with indenting
 //
 // Use this to format for logging any object that can be JSON unmarshalled
-// If JSON unmarshalling fails, the object will be formatted as a verb
+// Type and value will be logged
+// If JSON unmarshalling fails, the value will not be logged
 func FmtAny(value interface{}, name string) Field {
-	blob, err := json.MarshalIndent(value, "\t", "\t")
-	if err != nil {
-		return Field{fmt.Sprintf("%q: %v", name, value)}
+	if value == nil {
+		return Field(fmt.Sprintf("%q: null", name))
 	}
-	return Field{fmt.Sprintf("%q: %s", name, blob)}
+	blob, err := json.MarshalIndent(value, "\t\t", "\t")
+	if err != nil {
+		return Field(fmt.Sprintf("%q: {\n\t\t\"type\": %q,\n\t\t\"value\": \"NOT JSON MARSHALLABLE\"\n\t}", name, reflect.TypeOf(value)))
+	}
+	return Field(fmt.Sprintf("%q: {\n\t\t\"type\": %q,\n\t\t\"value\": %s\n\t}", name, reflect.TypeOf(value), blob))
+}
+
+// FmtAnys using JSON marshaller with indenting
+//
+// Use this to format for logging any object that can be JSON unmarshalled
+// Type and value will be logged
+// If JSON unmarshalling fails, the value will not be logged
+func FmtAnys(values []interface{}, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		if v == nil {
+			vals = append(vals, "null")
+			continue
+		}
+		var s string
+		if blob, err := json.MarshalIndent(v, "\t\t\t", "\t"); err != nil {
+			s = fmt.Sprintf("{\n\t\t\t\"type\": %q,\n\t\t\t\"value\": \"NOT JSON MARSHALLABLE\"\n\t\t}", reflect.TypeOf(v))
+		} else {
+			s = fmt.Sprintf("{\n\t\t\t\"type\": %q,\n\t\t\t\"value\": %s\n\t\t}", reflect.TypeOf(v), blob)
+		}
+		vals = append(vals, s)
+	}
+	return fmtSlice(vals, name, "%s")
 }
 
 // FmtBool as name/value pair for logging
 func FmtBool(value bool, name string) Field {
-	return Field{fmt.Sprintf("%q: %t", name, value)}
+	return Field(fmt.Sprintf("%q: %t", name, value))
 }
 
-// FmtBools as name/value pair for logging
+// FmtBools as name/[values] pair for logging
 func FmtBools(values []bool, name string) Field {
-	if len(values) == 0 {
-		return Field{fmt.Sprintf("%q: []", name)}
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
 	}
-	f := make([]string, len(values))
-	for i, v := range values {
-		f[i] = fmt.Sprintf("%t", v)
-	}
-	return Field{fmt.Sprintf("%q: [\n\t\t%s\n\t]", name, strings.Join(f, ",\n\t\t"))}
+	return fmtSlice(vals, name, "%t")
 }
 
 // FmtByte as name/value pair for logging
 func FmtByte(value byte, name string) Field {
-	return Field{fmt.Sprintf("%q: %q", name, value)}
+	return Field(fmt.Sprintf("%q: %q", name, value))
 }
 
 // FmtBytes as name/value pair for logging
 func FmtBytes(value []byte, name string) Field {
-	return Field{fmt.Sprintf("%q: %q", name, value)}
+	return Field(fmt.Sprintf("%q: %q", name, value))
 }
 
 // FmtDuration as name/value pair for logging
 func FmtDuration(value time.Duration, name string) Field {
-	return Field{fmt.Sprintf("%q: %q", name, value)}
+	return Field(fmt.Sprintf("%q: %q", name, value))
+}
+
+// FmtDurations as name/[values] pair for logging
+func FmtDurations(values []time.Duration, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
+	}
+	return fmtSlice(vals, name, "%q")
 }
 
 // FmtError as name/value pair for logging
-func FmtError(value error) Field {
-	return Field{fmt.Sprintf("%q: {\n\t\t%q: %q,\n\t\t%q: \"%+v\"\n\t}", "error", "friendly", value, "trace", value)}
+func FmtError(err error) Field {
+	if err == nil {
+		return Field("\"error\": null")
+	}
+	friendly := fmt.Sprintf("%s", err)
+	trace := fmt.Sprintf("%+v", err)
+	if trace == friendly {
+		return Field(fmt.Sprintf("\"error\": %q", friendly))
+	}
+	return Field(fmt.Sprintf("\"error\": {\n\t\t\"friendly\": %q,\n\t\t\"trace\": %q\n\t}", friendly, trace))
+}
+
+// FmtFloat32 as name/value pair for logging
+func FmtFloat32(value float32, name string) Field {
+	return Field(fmt.Sprintf("%q: %.5f", name, value))
+}
+
+// FmtFloat32s as name/[values] pair for logging
+func FmtFloat32s(values []float32, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
+	}
+	return fmtSlice(vals, name, "%.5f")
 }
 
 // FmtFloat64 as name/value pair for logging
 func FmtFloat64(value float64, name string) Field {
-	return Field{fmt.Sprintf("%q: %f", name, value)}
+	return Field(fmt.Sprintf("%q: %.10f", name, value))
+}
+
+// FmtFloat64s as name/[values] pair for logging
+func FmtFloat64s(values []float64, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
+	}
+	return fmtSlice(vals, name, "%.10f")
 }
 
 // FmtInt as name/value pair for logging
 func FmtInt(value int, name string) Field {
-	return Field{fmt.Sprintf("%q: %d", name, value)}
+	return Field(fmt.Sprintf("%q: %d", name, value))
+}
+
+// FmtInts as name/[values] pair for logging
+func FmtInts(values []int, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
+	}
+	return fmtSlice(vals, name, "%d")
+}
+
+// FmtInt32 as name/value pair for logging
+func FmtInt32(value int32, name string) Field {
+	return Field(fmt.Sprintf("%q: %d", name, value))
+}
+
+// FmtInt32s as name/[values] pair for logging
+func FmtInt32s(values []int32, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
+	}
+	return fmtSlice(vals, name, "%d")
 }
 
 // FmtInt64 as name/value pair for logging
 func FmtInt64(value int64, name string) Field {
-	return Field{fmt.Sprintf("%q: %d", name, value)}
+	return Field(fmt.Sprintf("%q: %d", name, value))
+}
+
+// FmtInt64s as name/[values] pair for logging
+func FmtInt64s(values []int64, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
+	}
+	return fmtSlice(vals, name, "%d")
 }
 
 // FmtString as name/value pair for logging
 func FmtString(value string, name string) Field {
-	return Field{fmt.Sprintf("%q: %q", name, value)}
+	return Field(fmt.Sprintf("%q: %q", name, value))
 }
 
-// FmtStrings as name/value pair for logging
+// FmtStrings as name/[values] pair for logging
 func FmtStrings(values []string, name string) Field {
-	if len(values) == 0 {
-		return Field{fmt.Sprintf("%q: []", name)}
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v)
 	}
-	f := make([]string, len(values))
-	for i, v := range values {
-		f[i] = fmt.Sprintf("%q", v)
-	}
-	return Field{fmt.Sprintf("%q: [\n\t\t%s\n\t]", name, strings.Join(f, ",\n\t\t"))}
+	return fmtSlice(vals, name, "%q")
 }
 
 // FmtTime as name/value pair for logging
 func FmtTime(value time.Time, name string) Field {
-	return Field{fmt.Sprintf("%q: %q", name, value.Format(time.RFC3339Nano))}
+	return Field(fmt.Sprintf("%q: %q", name, value.Format(time.RFC3339Nano)))
+}
+
+// FmtTimes as name/[values] pair for logging
+func FmtTimes(values []time.Time, name string) Field {
+	var vals []interface{}
+	for _, v := range values {
+		vals = append(vals, v.Format(time.RFC3339Nano))
+	}
+	return fmtSlice(vals, name, "%q")
+}
+
+func fmtSlice(values []interface{}, name, format string) Field {
+	if len(values) == 0 {
+		return Field(fmt.Sprintf("%q: []", name))
+	}
+	f := make([]string, len(values))
+	for i, v := range values {
+		f[i] = fmt.Sprintf(format, v)
+	}
+	return Field(fmt.Sprintf("%q: [\n\t\t%s\n\t]", name, strings.Join(f, ",\n\t\t")))
 }
 
 const (
@@ -189,8 +301,7 @@ const (
 )
 
 func (c client) output(ctx context.Context, severity int, message string, fields []Field) {
-	pc, _, line, _ := runtime.Caller(2)
-	funcName := runtime.FuncForPC(pc).Name()
+	line, funcName := runtimeLineAndFuncName(2)
 	message = fmtLog(pkg_context.CorrelationID(ctx), message, funcName, line, fields)
 	switch severity {
 	case severityDebug:
@@ -206,17 +317,23 @@ func (c client) output(ctx context.Context, severity int, message string, fields
 	}
 }
 
-func fmtLog(correlationID, message, funcName string, line int, fields []Field) string {
-	if len(fields) > 0 {
-		return fmt.Sprintf("%s %s %s:%d %s\x1b[0m", message, correlationID, funcName, line, fmtFields(fields))
-	}
-	return fmt.Sprintf("%s %s %s:%d\x1b[0m", message, correlationID, funcName, line)
+func runtimeLineAndFuncName(skip int) (int, string) {
+	pc, _, line, _ := runtime.Caller(skip + 1)
+	funcName := runtime.FuncForPC(pc).Name()
+	return line, funcName
+}
+
+func fmtLog(message, correlationID, funcName string, line int, fields []Field) string {
+	return fmt.Sprintf("%s %s %s:%d %s\x1b[0m", message, correlationID, funcName, line, fmtFields(fields))
 }
 
 func fmtFields(fields []Field) string {
+	if len(fields) == 0 {
+		return ""
+	}
 	var fs []string
 	for _, field := range fields {
-		fs = append(fs, field.s)
+		fs = append(fs, string(field))
 	}
 	return fmt.Sprintf("{\n\t%s\n}", strings.Join(fs, ",\n\t"))
 }
