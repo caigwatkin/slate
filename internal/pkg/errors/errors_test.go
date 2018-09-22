@@ -17,7 +17,7 @@ limitations under the License.
 package errors
 
 import (
-	pkg_testing "slate/internal/pkg/testing"
+	pkg_testing "github.com/caigwatkin/slate/internal/pkg/testing"
 	"testing"
 
 	"github.com/pkg/errors"

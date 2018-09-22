@@ -18,11 +18,11 @@ package http
 
 import (
 	"context"
+	"github.com/caigwatkin/slate/internal/pkg/http/headers"
+	"github.com/caigwatkin/slate/internal/pkg/http/middleware"
+	"github.com/caigwatkin/slate/internal/pkg/http/render"
+	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
-	"slate/internal/pkg/http/headers"
-	"slate/internal/pkg/http/middleware"
-	"slate/internal/pkg/http/render"
-	"slate/internal/pkg/log"
 
 	"github.com/go-chi/chi"
 )

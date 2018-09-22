@@ -18,7 +18,7 @@ package context
 
 import (
 	"context"
-	pkg_testing "slate/internal/pkg/testing"
+	pkg_testing "github.com/caigwatkin/slate/internal/pkg/testing"
 	"strings"
 	"testing"
 )

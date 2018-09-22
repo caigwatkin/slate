@@ -18,10 +18,10 @@ package api
 
 import (
 	"context"
+	pkg_http "github.com/caigwatkin/slate/internal/pkg/http"
+	"github.com/caigwatkin/slate/internal/pkg/log"
+	"github.com/caigwatkin/slate/internal/pkg/secrets"
 	"net/http"
-	pkg_http "slate/internal/pkg/http"
-	"slate/internal/pkg/log"
-	"slate/internal/pkg/secrets"
 
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"

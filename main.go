@@ -19,12 +19,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/caigwatkin/slate/internal/app/slate/api"
+	"github.com/caigwatkin/slate/internal/pkg/context"
+	"github.com/caigwatkin/slate/internal/pkg/http"
+	"github.com/caigwatkin/slate/internal/pkg/log"
+	"github.com/caigwatkin/slate/internal/pkg/secrets"
 	"os"
-	"slate/internal/app/slate/api"
-	"slate/internal/pkg/context"
-	"slate/internal/pkg/http"
-	"slate/internal/pkg/log"
-	"slate/internal/pkg/secrets"
 )
 
 var (

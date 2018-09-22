@@ -18,9 +18,9 @@ package render
 
 import (
 	"context"
+	pkg_context "github.com/caigwatkin/slate/internal/pkg/context"
+	pkg_headers "github.com/caigwatkin/slate/internal/pkg/http/headers"
 	"net/http"
-	pkg_context "slate/internal/pkg/context"
-	pkg_headers "slate/internal/pkg/http/headers"
 )
 
 func setHeadersInclDefaults(ctx context.Context, headersClient pkg_headers.Client, w http.ResponseWriter, headers map[string]string) map[string]string {

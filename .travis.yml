@@ -4,7 +4,7 @@ go:
 before_install:
   - export CODECOV_TOKEN="dfe8163e-dd0c-4c2e-9c62-bce7a87eeeff"
   - export GO111MODULE=on
-  - export API=slate
+  - export API=github.com/caigwatkin/slate
 install:
   - go get -u github.com/mgechev/revive
 before_script:

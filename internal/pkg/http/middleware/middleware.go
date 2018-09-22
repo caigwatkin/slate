@@ -17,10 +17,10 @@ limitations under the License.
 package middleware
 
 import (
+	pkg_context "github.com/caigwatkin/slate/internal/pkg/context"
+	"github.com/caigwatkin/slate/internal/pkg/http/headers"
+	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
-	pkg_context "slate/internal/pkg/context"
-	"slate/internal/pkg/http/headers"
-	"slate/internal/pkg/log"
 	"strings"
 	"time"
 

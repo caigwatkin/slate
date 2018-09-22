@@ -10,10 +10,9 @@ An API server written in Go. A clean slate, if you will.
 
 ## Usage
 
-Start the server by running the following from repo root:
-
 ```bash
-./scripts/go/slate.sh
+go get -u github.com/caigwatkin/slate
+slate -h
 ```
 
 ## Project structure
