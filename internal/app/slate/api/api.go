@@ -31,7 +31,7 @@ type Client struct {
 	config        Config
 	httpClient    pkg_http.Client
 	logClient     log.Client
-	secretsClient *secrets.Client
+	secretsClient secrets.Client
 	router        *chi.Mux
 	serviceName   string
 }
@@ -42,7 +42,7 @@ type Config struct {
 	Port         string
 }
 
-func NewClient(config Config, httpClient pkg_http.Client, logClient log.Client, secretsClient *secrets.Client) Client {
+func NewClient(config Config, httpClient pkg_http.Client, logClient log.Client, secretsClient secrets.Client) Client {
 	apiClient := Client{
 		config:        config,
 		httpClient:    httpClient,

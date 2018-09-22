@@ -19,8 +19,6 @@ package secrets
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
-	"os"
 	"slate/internal/pkg/errors"
 	"strings"
 
@@ -40,32 +38,23 @@ func newCloudkmsService(ctx context.Context) (*cloudkms.Service, error) {
 	return cloudKMSService, nil
 }
 
-func (s *Client) CloudKMSValue(source, kind string) (string, error) {
-	filename := fmt.Sprintf("%s-%s-cloudkms_%s.json", source, kind, os.Getenv("ENV"))
-	p, err := s.value(filename, cloudKMSLoadAndDecrypt)
-	if err != nil {
-		return "", errors.Wrapf(err, "Failed reading value of cloudkms secret %q", filename)
-	}
-	return p, nil
-}
-
 type cloudKMSSecret struct {
 	Name       string `json:"name"`
 	Ciphertext string `json:"ciphertext"`
 }
 
-func cloudKMSLoadAndDecrypt(s *Client, filename string) (string, error) {
-	var secret cloudKMSSecret
+func cloudKMSLoadAndDecrypt(c client, filename string) (string, error) {
+	var s cloudKMSSecret
 	err := load(filename, &s)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed loading secret from file")
 	}
-	n := strings.Split(secret.Name, "/")
+	n := strings.Split(s.Name, "/")
 	parentName := strings.Join(n[:8], "/")
 	req := &cloudkms.DecryptRequest{
-		Ciphertext: secret.Ciphertext,
+		Ciphertext: s.Ciphertext,
 	}
-	resp, err := s.cloudKMSService.Projects.Locations.KeyRings.CryptoKeys.Decrypt(parentName, req).Do()
+	resp, err := c.cloudKMSService.Projects.Locations.KeyRings.CryptoKeys.Decrypt(parentName, req).Do()
 	if err != nil {
 		return "", err
 	}

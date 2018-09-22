@@ -28,33 +28,49 @@ import (
 	cloudkms "google.golang.org/api/cloudkms/v1"
 )
 
-type Client struct {
-	cloudKMSService *cloudkms.Service
-	secrets         map[string]string
+// Client interface for secrets
+type Client interface {
+	Value(source, kind string) (string, error)
 }
 
-func NewClient(ctx context.Context) (*Client, error) {
+// NewClient returns a client that satisfies the Client interface
+func NewClient(ctx context.Context) (Client, error) {
 	cloudKMSService, err := newCloudkmsService(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed creating cloudkms service")
 	}
-	s := Client{
+	s := client{
 		cloudKMSService: cloudKMSService,
 		secrets:         make(map[string]string),
 	}
 	return &s, nil
 }
 
-func (s *Client) value(filename string, loadAndDecrypt func(s *Client, filename string) (string, error)) (string, error) {
-	if v, ok := s.secrets[filename]; ok {
+type client struct {
+	cloudKMSService *cloudkms.Service
+	secrets         map[string]string
+}
+
+// Value returns the decrypted value of a secret with the given source and kind
+func (c *client) Value(source, kind string) (string, error) {
+	filename := fmt.Sprintf("%s-%s-cloudkms_%s.json", source, kind, os.Getenv("ENV"))
+	p, err := c.value(filename, cloudKMSLoadAndDecrypt)
+	if err != nil {
+		return "", errors.Wrapf(err, "Failed reading value of cloudkms secret %q", filename)
+	}
+	return p, nil
+}
+
+func (c *client) value(filename string, loadAndDecrypt func(s client, filename string) (string, error)) (string, error) {
+	if v, ok := c.secrets[filename]; ok {
 		return v, nil
 	}
-	secret, err := loadAndDecrypt(s, filename)
+	secret, err := loadAndDecrypt(*c, filename)
 	if err != nil {
 		return "", errors.Wrap(err, "Failed decrypting secret")
 	}
-	s.secrets[filename] = string(secret)
-	return s.secrets[filename], nil
+	c.secrets[filename] = string(secret)
+	return c.secrets[filename], nil
 }
 
 func load(filename string, dst interface{}) error {
