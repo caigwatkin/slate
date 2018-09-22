@@ -5,7 +5,6 @@ before_install:
   - export CODECOV_TOKEN="dfe8163e-dd0c-4c2e-9c62-bce7a87eeeff"
   - export GO111MODULE=on
   - export API=slate
-  - export API_PATH=./cmd/$API
 install:
   - go get -u github.com/mgechev/revive
 before_script:
@@ -13,6 +12,6 @@ before_script:
   - revive -formatter=stylish -config=./configs/revive.toml -exclude=./vendor/... ./...
   - go test -mod=vendor -coverprofile=coverage.txt -covermode=atomic $API/...
 script:
-  - go build -mod=vendor -o=./bin/slate $API_PATH/...
+  - go build -mod=vendor -o=./bin/slate
 after_success:
   - bash <(curl -s https://codecov.io/bash)
