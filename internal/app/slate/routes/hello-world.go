@@ -18,9 +18,9 @@ package routes
 
 import (
 	"encoding/json"
+	pkg_http "github.com/caigwatkin/slate/internal/pkg/http"
+	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
-	pkg_http "slate/internal/pkg/http"
-	"slate/internal/pkg/log"
 )
 
 func ReadHelloWorld(httpClient pkg_http.Client, logClient log.Client) http.HandlerFunc {

@@ -17,8 +17,8 @@ limitations under the License.
 package routes
 
 import (
+	pkg_http "github.com/caigwatkin/slate/internal/pkg/http"
 	"net/http"
-	pkg_http "slate/internal/pkg/http"
 )
 
 func Health(httpClient pkg_http.Client, serviceName string) http.HandlerFunc {

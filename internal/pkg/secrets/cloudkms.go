@@ -19,7 +19,7 @@ package secrets
 import (
 	"context"
 	"encoding/base64"
-	"slate/internal/pkg/errors"
+	"github.com/caigwatkin/slate/internal/pkg/errors"
 	"strings"
 
 	"golang.org/x/oauth2/google"

@@ -17,11 +17,9 @@ limitations under the License.
 package errors
 
 import (
+	pkg_testing "github.com/caigwatkin/slate/internal/pkg/testing"
 	"net/http"
-	pkg_testing "slate/internal/pkg/testing"
 	"testing"
-
-	"github.com/pkg/errors"
 )
 
 func TestNewStatus(t *testing.T) {
@@ -244,7 +242,7 @@ func TestStatusCode(t *testing.T) {
 
 		{
 			desc:     "error",
-			input:    errors.New(""),
+			input:    New(""),
 			expected: 0,
 		},
 	}

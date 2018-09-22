@@ -1,4 +1,4 @@
-module slate
+module github.com/caigwatkin/slate
 
 require (
 	cloud.google.com/go v0.27.0 // indirect

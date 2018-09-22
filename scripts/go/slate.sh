@@ -7,7 +7,7 @@ SCRIPT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 SCRIPT_DIR_NAME=${SCRIPT_DIR##*/}
 SCRIPT_NAME=`basename $0`
 
-API="slate"
+API="github.com/caigwatkin/slate"
 
 export GO111MODULE=on
 

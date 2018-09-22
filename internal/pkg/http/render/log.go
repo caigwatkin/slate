@@ -18,8 +18,8 @@ package render
 
 import (
 	"context"
+	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
-	"slate/internal/pkg/log"
 )
 
 func logErrorMarshallingJSONBody(ctx context.Context, logClient log.Client, code int, headers map[string]string) {

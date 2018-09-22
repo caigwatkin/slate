@@ -19,10 +19,10 @@ package render
 import (
 	"context"
 	"encoding/json"
+	"github.com/caigwatkin/slate/internal/pkg/errors"
+	"github.com/caigwatkin/slate/internal/pkg/http/headers"
+	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
-	"slate/internal/pkg/errors"
-	"slate/internal/pkg/http/headers"
-	"slate/internal/pkg/log"
 )
 
 // ContentJSON writes JSON bytes to the response writer with status code OK

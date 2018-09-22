@@ -19,10 +19,10 @@ package log
 import (
 	"errors"
 	"fmt"
+	pkg_errors "github.com/caigwatkin/slate/internal/pkg/errors"
+	pkg_testing "github.com/caigwatkin/slate/internal/pkg/testing"
 	"reflect"
 	"runtime"
-	pkg_errors "slate/internal/pkg/errors"
-	pkg_testing "slate/internal/pkg/testing"
 	"testing"
 	"time"
 )
