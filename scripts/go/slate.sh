@@ -8,7 +8,6 @@ SCRIPT_DIR_NAME=${SCRIPT_DIR##*/}
 SCRIPT_NAME=`basename $0`
 
 API="slate"
-API_MAIN="./cmd/slate"
 
 export GO111MODULE=on
 
@@ -31,7 +30,7 @@ go test -mod vendor ${API}/...
 echo
 
 echo "Building..."
-go build -mod vendor -o bin/${API} ${API_MAIN}
+go build -mod vendor -o bin/${API}
 echo
 
 echo "Running..."
