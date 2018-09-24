@@ -18,12 +18,12 @@ package http
 
 import (
 	"context"
-	"github.com/caigwatkin/slate/internal/pkg/http/headers"
-	"github.com/caigwatkin/slate/internal/pkg/http/middleware"
-	"github.com/caigwatkin/slate/internal/pkg/http/render"
-	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
 
+	go_headers "github.com/caigwatkin/go/http/headers"
+	go_middleware "github.com/caigwatkin/go/http/middleware"
+	go_render "github.com/caigwatkin/go/http/render"
+	go_log "github.com/caigwatkin/go/log"
 	"github.com/go-chi/chi"
 )
 
@@ -35,37 +35,37 @@ type Client interface {
 }
 
 type client struct {
-	headersClient headers.Client
-	logClient     log.Client
+	headersClient go_headers.Client
+	logClient     go_log.Client
 }
 
 // NewClient for http
 //
 // Service name should be in canonical case as it is used for custom response headers
 // Use an empty string to use default keys
-func NewClient(logClient log.Client, serviceNameForHeaders string) Client {
+func NewClient(logClient go_log.Client, serviceNameForHeaders string) Client {
 	return client{
-		headersClient: headers.NewClient(serviceNameForHeaders),
+		headersClient: go_headers.NewClient(serviceNameForHeaders),
 		logClient:     logClient,
 	}
 }
 
 // RenderContentJSON in response
 func (c client) RenderContentJSON(ctx context.Context, w http.ResponseWriter, body []byte) {
-	render.ContentJSON(ctx, c.headersClient, c.logClient, w, body)
+	go_render.ContentJSON(ctx, c.headersClient, c.logClient, w, body)
 }
 
 // RenderHealth in response
 func (c client) RenderHealth(ctx context.Context, w http.ResponseWriter, serviceName string) {
-	render.Health(ctx, c.headersClient, c.logClient, w, serviceName)
+	go_render.Health(ctx, c.headersClient, c.logClient, w, serviceName)
 }
 
 // RenderErrorOrStatus in response
 func (c client) RenderErrorOrStatus(ctx context.Context, w http.ResponseWriter, err error) {
-	render.ErrorOrStatus(ctx, c.headersClient, c.logClient, w, err)
+	go_render.ErrorOrStatus(ctx, c.headersClient, c.logClient, w, err)
 }
 
 // MiddlewareDefaults for request handling
 func (c client) MiddlewareDefaults(r *chi.Mux, excludePathsForLogInfoRequests []string) {
-	middleware.Defaults(r, c.headersClient, c.logClient, excludePathsForLogInfoRequests)
+	go_middleware.Defaults(r, c.headersClient, c.logClient, excludePathsForLogInfoRequests)
 }

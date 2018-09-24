@@ -17,20 +17,20 @@ limitations under the License.
 package middleware
 
 import (
-	pkg_context "github.com/caigwatkin/slate/internal/pkg/context"
-	"github.com/caigwatkin/slate/internal/pkg/http/headers"
-	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
 	"strings"
 	"time"
 
+	go_context "github.com/caigwatkin/go/context"
+	go_headers "github.com/caigwatkin/go/http/headers"
+	go_log "github.com/caigwatkin/go/log"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/google/uuid"
 )
 
 // Defaults adds middleware defaults to the router
-func Defaults(router *chi.Mux, headersClient headers.Client, logClient log.Client, excludePathsForLogInfoRequests []string) {
+func Defaults(router *chi.Mux, headersClient go_headers.Client, logClient go_log.Client, excludePathsForLogInfoRequests []string) {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Logger)
 	router.Use(middleware.Recoverer)
@@ -41,24 +41,24 @@ func Defaults(router *chi.Mux, headersClient headers.Client, logClient log.Clien
 	router.Use(middleware.DefaultCompress)
 }
 
-func populateContext(headersClient headers.Client) func(next http.Handler) http.Handler {
+func populateContext(headersClient go_headers.Client) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			ctx := pkg_context.WithCorrelationID(r.Context(), uuid.New().String())
+			ctx := go_context.WithCorrelationID(r.Context(), uuid.New().String())
 			if v, ok := r.Header[headersClient.CorrelationIDKey()]; ok {
-				ctx = pkg_context.WithCorrelationIDAppend(ctx, strings.Join(v, ","))
+				ctx = go_context.WithCorrelationIDAppend(ctx, strings.Join(v, ","))
 			}
 			var t bool
 			if v, ok := r.Header[headersClient.TestKey()]; ok {
-				t = strings.Join(v, ",") == headers.TestValDefault
+				t = strings.Join(v, ",") == go_headers.TestValDefault
 			}
-			ctx = pkg_context.WithTest(ctx, t)
+			ctx = go_context.WithTest(ctx, t)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
 
-func logInfoRequests(logClient log.Client, excludePaths []string) func(next http.Handler) http.Handler {
+func logInfoRequests(logClient go_log.Client, excludePaths []string) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			url := r.URL.String()
@@ -71,9 +71,9 @@ func logInfoRequests(logClient log.Client, excludePaths []string) func(next http
 			}
 			if !exclude {
 				logClient.Info(r.Context(), "HTTP Request",
-					log.FmtString(r.URL.String(), "URL"),
-					log.FmtString(r.Method, "Method"),
-					log.FmtAny(r.Header, "Header"),
+					go_log.FmtString(r.URL.String(), "URL"),
+					go_log.FmtString(r.Method, "Method"),
+					go_log.FmtAny(r.Header, "Header"),
 				)
 			}
 			next.ServeHTTP(w, r)

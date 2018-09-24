@@ -19,12 +19,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/caigwatkin/slate/internal/app/slate/api"
-	"github.com/caigwatkin/slate/internal/pkg/context"
-	"github.com/caigwatkin/slate/internal/pkg/http"
-	"github.com/caigwatkin/slate/internal/pkg/log"
-	"github.com/caigwatkin/slate/internal/pkg/secrets"
 	"os"
+
+	go_context "github.com/caigwatkin/go/context"
+	go_http "github.com/caigwatkin/go/http"
+	go_log "github.com/caigwatkin/go/log"
+	go_secrets "github.com/caigwatkin/go/secrets"
+	"github.com/caigwatkin/slate/app/slate/api"
 )
 
 var (
@@ -45,27 +46,27 @@ func init() {
 }
 
 func main() {
-	ctx := context.StartUp()
+	ctx := go_context.StartUp()
 
-	logClient := log.NewClient(debug)
+	logClient := go_log.NewClient(debug)
 	logClient.Info(ctx, "Logger initialised",
-		log.FmtBool(debug, "debug"),
-		log.FmtString(env, "env"),
-		log.FmtString(gcpProjectID, "gcpProjectID"),
-		log.FmtInt(port, "port"),
-		log.FmtString(serviceName, "serviceName"),
-		log.FmtStrings(os.Environ(), "os.Environ()"),
+		go_log.FmtBool(debug, "debug"),
+		go_log.FmtString(env, "env"),
+		go_log.FmtString(gcpProjectID, "gcpProjectID"),
+		go_log.FmtInt(port, "port"),
+		go_log.FmtString(serviceName, "serviceName"),
+		go_log.FmtStrings(os.Environ(), "os.Environ()"),
 	)
 
 	logClient.Info(ctx, "Creating secrets client")
-	secretsClient, err := secrets.NewClient(ctx)
+	secretsClient, err := go_secrets.NewClient(ctx)
 	if err != nil {
-		logClient.Fatal(ctx, "Failed creating secrets client", log.FmtError(err))
+		logClient.Fatal(ctx, "Failed creating secrets client", go_log.FmtError(err))
 	}
 	logClient.Info(ctx, "Created secrets client")
 
 	logClient.Info(ctx, "Creating http client")
-	httpClient := http.NewClient(logClient, "Slate")
+	httpClient := go_http.NewClient(logClient, "Slate")
 	logClient.Info(ctx, "Created http client")
 
 	logClient.Info(ctx, "Creating API client")
@@ -77,7 +78,7 @@ func main() {
 	logClient.Info(ctx, "Created API client")
 
 	if err := apiClient.ListenAndServe(ctx); err != nil {
-		logClient.Fatal(ctx, "Slate client unexpectedly returned with error from listening and serving; terminating", log.FmtError(err))
+		logClient.Fatal(ctx, "Slate client unexpectedly returned with error from listening and serving; terminating", go_log.FmtError(err))
 		return
 	}
 	logClient.Fatal(ctx, "Slate client unexpectedly returned from listening and serving; terminating")

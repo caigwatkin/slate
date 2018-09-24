@@ -14,17 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package routes
 
 import (
-	"github.com/caigwatkin/slate/internal/app/slate/routes"
+	"net/http"
 
-	"github.com/go-chi/chi"
+	go_http "github.com/caigwatkin/go/http"
 )
 
-func (api *Client) loadEndpoints(pathForHealthEndpoint string) {
-	api.router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
-	api.router.Route("/hello-world", func(router chi.Router) {
-		router.Get("/", routes.ReadHelloWorld(api.httpClient, api.logClient))
-	})
+func Health(httpClient go_http.Client, serviceName string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		httpClient.RenderHealth(r.Context(), w, serviceName)
+	}
 }

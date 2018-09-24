@@ -20,13 +20,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	pkg_context "github.com/caigwatkin/slate/internal/pkg/context"
 	"log"
 	"os"
 	"reflect"
 	"runtime"
 	"strings"
 	"time"
+
+	go_context "github.com/caigwatkin/go/context"
 )
 
 type Client interface {
@@ -302,7 +303,7 @@ const (
 
 func (c client) output(ctx context.Context, severity int, message string, fields []Field) {
 	line, funcName := runtimeLineAndFuncName(2)
-	message = fmtLog(pkg_context.CorrelationID(ctx), message, funcName, line, fields)
+	message = fmtLog(go_context.CorrelationID(ctx), message, funcName, line, fields)
 	switch severity {
 	case severityDebug:
 		c.loggerDebug.Println(message)
