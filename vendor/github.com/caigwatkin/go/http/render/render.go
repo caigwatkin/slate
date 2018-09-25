@@ -19,14 +19,15 @@ package render
 import (
 	"context"
 	"encoding/json"
-	"github.com/caigwatkin/slate/internal/pkg/errors"
-	"github.com/caigwatkin/slate/internal/pkg/http/headers"
-	"github.com/caigwatkin/slate/internal/pkg/log"
 	"net/http"
+
+	go_errors "github.com/caigwatkin/go/errors"
+	go_headers "github.com/caigwatkin/go/http/headers"
+	go_log "github.com/caigwatkin/go/log"
 )
 
 // ContentJSON writes JSON bytes to the response writer with status code OK
-func ContentJSON(ctx context.Context, headersClient headers.Client, logClient log.Client, w http.ResponseWriter, body []byte) {
+func ContentJSON(ctx context.Context, headersClient go_headers.Client, logClient go_log.Client, w http.ResponseWriter, body []byte) {
 	headers := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
 	})
@@ -44,7 +45,7 @@ func ContentJSON(ctx context.Context, headersClient headers.Client, logClient lo
 // ContentJSON writes a small JSON body to the response writer with status code OK
 //
 // Used for health check endpoints to ensure API is serving
-func Health(ctx context.Context, headersClient headers.Client, logClient log.Client, w http.ResponseWriter, serviceName string) {
+func Health(ctx context.Context, headersClient go_headers.Client, logClient go_log.Client, w http.ResponseWriter, serviceName string) {
 	headers := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
 	})
@@ -67,8 +68,8 @@ func Health(ctx context.Context, headersClient headers.Client, logClient log.Cli
 	}
 }
 
-// Status writes a errors.Status as JSON to the response writer with status code Status.Code
-func Status(ctx context.Context, headersClient headers.Client, logClient log.Client, w http.ResponseWriter, s errors.Status) {
+// Status writes a go_errors.Status as JSON to the response writer with status code Status.Code
+func Status(ctx context.Context, headersClient go_headers.Client, logClient go_log.Client, w http.ResponseWriter, s go_errors.Status) {
 	h := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
 	})
@@ -83,8 +84,8 @@ func Status(ctx context.Context, headersClient headers.Client, logClient log.Cli
 }
 
 // ErrorOrStatus wraps Status if error is a Status, otherwise writes status code Internal Server Error
-func ErrorOrStatus(ctx context.Context, headersClient headers.Client, logClient log.Client, w http.ResponseWriter, err error) {
-	if v, ok := err.(errors.Status); ok {
+func ErrorOrStatus(ctx context.Context, headersClient go_headers.Client, logClient go_log.Client, w http.ResponseWriter, err error) {
+	if v, ok := err.(go_errors.Status); ok {
 		Status(ctx, headersClient, logClient, w, v)
 		return
 	}

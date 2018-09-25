@@ -1,5 +1,14 @@
 # cloud.google.com/go v0.28.0
 cloud.google.com/go/compute/metadata
+# github.com/caigwatkin/go v0.0.0-20180924193504-fdae37a32f86
+github.com/caigwatkin/go/context
+github.com/caigwatkin/go/http
+github.com/caigwatkin/go/log
+github.com/caigwatkin/go/secrets
+github.com/caigwatkin/go/http/headers
+github.com/caigwatkin/go/http/middleware
+github.com/caigwatkin/go/http/render
+github.com/caigwatkin/go/errors
 # github.com/go-chi/chi v3.3.3+incompatible
 github.com/go-chi/chi
 github.com/go-chi/chi/middleware

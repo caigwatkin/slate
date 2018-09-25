@@ -14,15 +14,28 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package routes
+package render
 
 import (
-	pkg_http "github.com/caigwatkin/slate/internal/pkg/http"
+	"context"
 	"net/http"
+
+	go_context "github.com/caigwatkin/go/context"
+	go_headers "github.com/caigwatkin/go/http/headers"
 )
 
-func Health(httpClient pkg_http.Client, serviceName string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		httpClient.RenderHealth(r.Context(), w, serviceName)
+func setHeadersInclDefaults(ctx context.Context, headersClient go_headers.Client, w http.ResponseWriter, headers map[string]string) map[string]string {
+	h := map[string]string{
+		headersClient.CorrelationIDKey(): go_context.CorrelationID(ctx),
 	}
+	if go_context.Test(ctx) {
+		h[headersClient.TestKey()] = go_headers.TestValDefault
+	}
+	for k, v := range headers {
+		h[k] = v
+	}
+	for k, v := range h {
+		w.Header().Set(k, v)
+	}
+	return h
 }

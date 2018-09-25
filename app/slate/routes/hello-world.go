@@ -14,35 +14,27 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package testing
+package routes
 
 import (
 	"encoding/json"
-	"fmt"
+	"net/http"
+
+	go_http "github.com/caigwatkin/go/http"
+	go_log "github.com/caigwatkin/go/log"
 )
 
-type Error struct {
-	Unexpected string
-	Desc       string
-	At         int
-	Input      interface{}
-	Expected   interface{}
-	Result     interface{}
-}
+func ReadHelloWorld(httpClient go_http.Client, logClient go_log.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		logClient.Info(ctx, "Reading")
 
-func Errorf(e Error) string {
-	b, err := json.MarshalIndent(e, "", "\t")
-	if err != nil {
-		return fmt.Sprintf(fmtString, e.Unexpected, e.Desc, e.At)
+		b, err := json.MarshalIndent(map[string]string{
+			"hello": "world",
+		}, "", "\t")
+		if err != nil {
+			httpClient.RenderErrorOrStatus(ctx, w, err)
+		}
+		httpClient.RenderContentJSON(ctx, w, b)
 	}
-	return string(b)
 }
-
-const fmtString = `{
-	"Unexpected": %q,
-	"Desc": %q,
-	"At": %d,
-	"Input": "potentially unmarshallable",
-	"Expected": "potentially unmarshallable",
-	"Result": "potentially unmarshallable"
-}`

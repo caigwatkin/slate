@@ -14,26 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package routes
+package api
 
 import (
-	"encoding/json"
-	pkg_http "github.com/caigwatkin/slate/internal/pkg/http"
-	"github.com/caigwatkin/slate/internal/pkg/log"
-	"net/http"
+	"github.com/caigwatkin/slate/app/slate/routes"
+	"github.com/go-chi/chi"
 )
 
-func ReadHelloWorld(httpClient pkg_http.Client, logClient log.Client) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		logClient.Info(ctx, "Reading")
-
-		b, err := json.MarshalIndent(map[string]string{
-			"hello": "world",
-		}, "", "\t")
-		if err != nil {
-			httpClient.RenderErrorOrStatus(ctx, w, err)
-		}
-		httpClient.RenderContentJSON(ctx, w, b)
-	}
+func (api *Client) loadEndpoints(pathForHealthEndpoint string) {
+	api.router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
+	api.router.Route("/hello-world", func(router chi.Router) {
+		router.Get("/", routes.ReadHelloWorld(api.httpClient, api.logClient))
+	})
 }

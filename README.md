@@ -17,7 +17,11 @@ slate -h
 
 ## Project structure
 
-Uses project structure/layout as recommended by [golang standards guide](https://github.com/golang-standards/project-layout)
+Uses a modified version of the project structure/layout as recommended by [golang standards guide](https://github.com/golang-standards/project-layout)
+
+### Modifications to structure
+
+What would be in the `github.com/xxx/internal/app` package is in `github.com/xxx/app` as the `github.com/xxx/internal/pkg` package is in a separate repo: [github.com/caigwatkin/go](https://github.com/caigwatkin/go). Additionally, `main.go` is in repo root to allow `go get` functionality.
 
 ## CI/CD
 

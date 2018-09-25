@@ -19,9 +19,9 @@ package secrets
 import (
 	"context"
 	"encoding/base64"
-	"github.com/caigwatkin/slate/internal/pkg/errors"
 	"strings"
 
+	go_errors "github.com/caigwatkin/go/errors"
 	"golang.org/x/oauth2/google"
 	cloudkms "google.golang.org/api/cloudkms/v1"
 )
@@ -29,11 +29,11 @@ import (
 func newCloudkmsService(ctx context.Context) (*cloudkms.Service, error) {
 	client, err := google.DefaultClient(ctx, cloudkms.CloudPlatformScope)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed initialising default google client cloudkms.CloudPlatformScope")
+		return nil, go_errors.Wrap(err, "Failed initialising default google client cloudkms.CloudPlatformScope")
 	}
 	cloudKMSService, err := cloudkms.New(client)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed creating the kms client")
+		return nil, go_errors.Wrap(err, "Failed creating the kms client")
 	}
 	return cloudKMSService, nil
 }
@@ -47,7 +47,7 @@ func cloudKMSLoadAndDecrypt(c client, filename string) (string, error) {
 	var s cloudKMSSecret
 	err := load(filename, &s)
 	if err != nil {
-		return "", errors.Wrap(err, "Failed loading secret from file")
+		return "", go_errors.Wrap(err, "Failed loading secret from file")
 	}
 	n := strings.Split(s.Name, "/")
 	parentName := strings.Join(n[:8], "/")
@@ -60,7 +60,7 @@ func cloudKMSLoadAndDecrypt(c client, filename string) (string, error) {
 	}
 	p, err := base64.StdEncoding.DecodeString(resp.Plaintext)
 	if err != nil {
-		return "", errors.Wrap(err, "Failed decoding base64 plaintext to byte array")
+		return "", go_errors.Wrap(err, "Failed decoding base64 plaintext to byte array")
 	}
 	return strings.Replace(string(p), "\n", "", -1), nil
 }

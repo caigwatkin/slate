@@ -20,11 +20,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/caigwatkin/slate/internal/pkg/errors"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 
+	go_errors "github.com/caigwatkin/go/errors"
 	cloudkms "google.golang.org/api/cloudkms/v1"
 )
 
@@ -37,7 +37,7 @@ type Client interface {
 func NewClient(ctx context.Context) (Client, error) {
 	cloudKMSService, err := newCloudkmsService(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Failed creating cloudkms service")
+		return nil, go_errors.Wrap(err, "Failed creating cloudkms service")
 	}
 	s := client{
 		cloudKMSService: cloudKMSService,
@@ -56,7 +56,7 @@ func (c *client) Value(source, kind string) (string, error) {
 	filename := fmt.Sprintf("%s-%s-cloudkms_%s.json", source, kind, os.Getenv("ENV"))
 	p, err := c.value(filename, cloudKMSLoadAndDecrypt)
 	if err != nil {
-		return "", errors.Wrapf(err, "Failed reading value of cloudkms secret %q", filename)
+		return "", go_errors.Wrapf(err, "Failed reading value of cloudkms secret %q", filename)
 	}
 	return p, nil
 }
@@ -67,7 +67,7 @@ func (c *client) value(filename string, loadAndDecrypt func(s client, filename s
 	}
 	secret, err := loadAndDecrypt(*c, filename)
 	if err != nil {
-		return "", errors.Wrap(err, "Failed decrypting secret")
+		return "", go_errors.Wrap(err, "Failed decrypting secret")
 	}
 	c.secrets[filename] = string(secret)
 	return c.secrets[filename], nil
@@ -76,15 +76,15 @@ func (c *client) value(filename string, loadAndDecrypt func(s client, filename s
 func load(filename string, dst interface{}) error {
 	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
 	if err != nil {
-		return errors.Wrap(err, "Failed to retrieve current directory")
+		return go_errors.Wrap(err, "Failed to retrieve current directory")
 	}
 	f := fmt.Sprintf("%s/%s", dir, filename)
 	buf, err := ioutil.ReadFile(f)
 	if err != nil {
-		return errors.Wrapf(err, "Failed read file %q", f)
+		return go_errors.Wrapf(err, "Failed read file %q", f)
 	}
 	if err := json.Unmarshal(buf, &dst); err != nil {
-		return errors.Wrapf(err, "Failed unmarshal file %q into dst", f)
+		return go_errors.Wrapf(err, "Failed unmarshal file %q into dst", f)
 	}
 	return nil
 }

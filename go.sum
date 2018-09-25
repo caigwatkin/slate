@@ -1,5 +1,7 @@
 cloud.google.com/go v0.28.0 h1:KZ/88LWSw8NxMkjdQyX7LQSGR9PkHr4PaVuNm8zgFq0=
 cloud.google.com/go v0.28.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
+github.com/caigwatkin/go v0.0.0-20180924193504-fdae37a32f86 h1:XNOqXOFyfyTw/gprDRp70gcF+4040Br01etnpP2RxE8=
+github.com/caigwatkin/go v0.0.0-20180924193504-fdae37a32f86/go.mod h1:7ups3wgJfkDlO0Rdc1CWO3SqQYV62NjSplStUAPt120=
 github.com/go-chi/chi v3.3.3+incompatible h1:KHkmBEMNkwKuK4FdQL7N2wOeB9jnIx7jR5wsuSBEFI8=
 github.com/go-chi/chi v3.3.3+incompatible/go.mod h1:eB3wogJHnLi3x/kFX2A+IbTBlXxmMeXJVKy9tTv1XzQ=
 github.com/golang/protobuf v1.2.0 h1:P3YflyNX/ehuJFLhxviNdFxQPkGK5cDcApsge1SqnvM=

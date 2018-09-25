@@ -18,20 +18,20 @@ package api
 
 import (
 	"context"
-	pkg_http "github.com/caigwatkin/slate/internal/pkg/http"
-	"github.com/caigwatkin/slate/internal/pkg/log"
-	"github.com/caigwatkin/slate/internal/pkg/secrets"
 	"net/http"
 
+	go_http "github.com/caigwatkin/go/http"
+	go_log "github.com/caigwatkin/go/log"
+	go_secrets "github.com/caigwatkin/go/secrets"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 )
 
 type Client struct {
 	config        Config
-	httpClient    pkg_http.Client
-	logClient     log.Client
-	secretsClient secrets.Client
+	httpClient    go_http.Client
+	logClient     go_log.Client
+	secretsClient go_secrets.Client
 	router        *chi.Mux
 	serviceName   string
 }
@@ -42,7 +42,7 @@ type Config struct {
 	Port         string
 }
 
-func NewClient(config Config, httpClient pkg_http.Client, logClient log.Client, secretsClient secrets.Client) Client {
+func NewClient(config Config, httpClient go_http.Client, logClient go_log.Client, secretsClient go_secrets.Client) Client {
 	apiClient := Client{
 		config:        config,
 		httpClient:    httpClient,
@@ -62,7 +62,7 @@ func (api Client) loadMiddleware(pathForHealthEndpoint string) {
 }
 
 func (api Client) ListenAndServe(ctx context.Context) error {
-	api.logClient.Info(ctx, "Listening and serving", log.FmtString(api.config.Port, "port"))
+	api.logClient.Info(ctx, "Listening and serving", go_log.FmtString(api.config.Port, "port"))
 
 	if err := http.ListenAndServe(api.config.Port, api.router); err != nil {
 		return errors.Wrap(err, "Failed listening and serving")
