@@ -1,6 +1,6 @@
 # cloud.google.com/go v0.28.0
 cloud.google.com/go/compute/metadata
-# github.com/caigwatkin/go v0.0.0-20180924193504-fdae37a32f86
+# github.com/caigwatkin/go v0.0.0-20180926195045-2bce83ac7c47
 github.com/caigwatkin/go/context
 github.com/caigwatkin/go/http
 github.com/caigwatkin/go/log
@@ -18,7 +18,7 @@ github.com/golang/protobuf/proto
 github.com/google/uuid
 # github.com/pkg/errors v0.8.0
 github.com/pkg/errors
-# golang.org/x/net v0.0.0-20180921000356-2f5d2388922f
+# golang.org/x/net v0.0.0-20180926154720-4dfa2610cdf3
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
 # golang.org/x/oauth2 v0.0.0-20180821212333-d2e6202438be
@@ -27,7 +27,7 @@ golang.org/x/oauth2
 golang.org/x/oauth2/internal
 golang.org/x/oauth2/jws
 golang.org/x/oauth2/jwt
-# google.golang.org/api v0.0.0-20180921000521-920bb1beccf7
+# google.golang.org/api v0.0.0-20180925145026-e5ba110cb6cd
 google.golang.org/api/cloudkms/v1
 google.golang.org/api/gensupport
 google.golang.org/api/googleapi

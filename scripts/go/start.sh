@@ -18,19 +18,19 @@ go fmt ${API}/...
 echo
 
 echo "Vetting..."
-go vet -mod vendor ${API}/...
+go vet -mod=vendor ${API}/...
 echo
 
 echo "Linting..."
-revive -formatter stylish -config ${SCRIPT_DIR}/../../configs/revive.toml -exclude ${SCRIPT_DIR}/../../vendor/... ${SCRIPT_DIR}/...
+revive -formatter=stylish -config=${SCRIPT_DIR}/../../configs/revive.toml -exclude=${SCRIPT_DIR}/../../vendor/... ${SCRIPT_DIR}/../../...
 echo
 
 echo "Testing..."
-go test -mod vendor ${API}/...
+go test -mod=vendor ${API}/...
 echo
 
 echo "Building..."
-go build -mod vendor -o bin/${API}
+go build -mod=vendor -o bin/${API}
 echo
 
 echo "Running..."
