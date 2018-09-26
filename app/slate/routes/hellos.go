@@ -22,15 +22,27 @@ import (
 
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
+	"github.com/go-chi/chi"
 )
 
-func ReadHelloWorld(httpClient go_http.Client, logClient go_log.Client) http.HandlerFunc {
+func CreateHello(httpClient go_http.Client, logClient go_log.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		logClient.Info(ctx, "Creating")
+
+		httpClient.RenderCreated(ctx, w, "some_id")
+	}
+}
+
+func ReadHelloByID(httpClient go_http.Client, logClient go_log.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		logClient.Info(ctx, "Reading")
 
+		helloID := chi.URLParam(r, "hello_id")
 		b, err := json.MarshalIndent(map[string]string{
 			"hello": "world",
+			"id":    helloID,
 		}, "", "\t")
 		if err != nil {
 			httpClient.RenderErrorOrStatus(ctx, w, err)

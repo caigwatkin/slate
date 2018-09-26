@@ -22,8 +22,12 @@ import (
 )
 
 func (api *Client) loadEndpoints(pathForHealthEndpoint string) {
-	api.router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
-	api.router.Route("/hello-world", func(router chi.Router) {
-		router.Get("/", routes.ReadHelloWorld(api.httpClient, api.logClient))
+	router := api.router
+	router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
+	router.Route("/hellos", func(router chi.Router) {
+		router.Post("/", routes.CreateHello(api.httpClient, api.logClient))
+		router.Route("/{hello_id}", func(router chi.Router) {
+			router.Get("/", routes.ReadHelloByID(api.httpClient, api.logClient))
+		})
 	})
 }
