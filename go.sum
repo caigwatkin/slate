@@ -5,8 +5,8 @@ contrib.go.opencensus.io/exporter/stackdriver v0.6.0 h1:U0FQWsZU3aO8W+BrZc88T8fd
 contrib.go.opencensus.io/exporter/stackdriver v0.6.0/go.mod h1:QeFzMJDAw8TXt5+aRaSuE8l5BwaMIOIlaVkBOPRuMuw=
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
-github.com/caigwatkin/go v0.0.0-20180928232341-08695aa44296 h1:tub2qpdIlnLznQBKYToOYYNxZYwtcaTmQaAvxetr7ec=
-github.com/caigwatkin/go v0.0.0-20180928232341-08695aa44296/go.mod h1:C2lIV2EoN2Q11qvxjMNizZ4NBDKF0n0WRpQtMgcfjvk=
+github.com/caigwatkin/go v0.0.0-20180928235346-904a7b5d3e2f h1:DcKcNk8cviW1WkrOwOGdqEB+Yd5Fv37JiuurVC9bNNg=
+github.com/caigwatkin/go v0.0.0-20180928235346-904a7b5d3e2f/go.mod h1:zjsMb8BawGgVogxLWi1Zw9xqdMz50UEOtyuoMCayI64=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/go-chi/chi v3.3.3+incompatible h1:KHkmBEMNkwKuK4FdQL7N2wOeB9jnIx7jR5wsuSBEFI8=
 github.com/go-chi/chi v3.3.3+incompatible/go.mod h1:eB3wogJHnLi3x/kFX2A+IbTBlXxmMeXJVKy9tTv1XzQ=
@@ -65,8 +65,8 @@ google.golang.org/appengine v1.2.0 h1:S0iUepdCWODXRvtE+gcRDd15L+k+k1AiHlMiMjefH2
 google.golang.org/appengine v1.2.0/go.mod h1:xpcJRLb0r/rnEns0DIKYYv+WjYCduHsrkT7/EB5XEv4=
 google.golang.org/genproto v0.0.0-20180817151627-c66870c02cf8/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
 google.golang.org/genproto v0.0.0-20180831171423-11092d34479b/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
-google.golang.org/genproto v0.0.0-20180925191851-0e822944c569 h1:BsdBqIWYT0UZT55Dd//WeD6tZc0kwUHZgg6iVpOhbj8=
-google.golang.org/genproto v0.0.0-20180925191851-0e822944c569/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
+google.golang.org/genproto v0.0.0-20180928223349-c7e5094acea1 h1:y+7ra8GA+PNVmm+pBIWTKIK+YaBeRiGH+3544JQqm58=
+google.golang.org/genproto v0.0.0-20180928223349-c7e5094acea1/go.mod h1:JiN7NxoALGmiZfu7CAH4rXhgtRTLTxftemlI0sWmxmc=
 google.golang.org/grpc v1.14.0/go.mod h1:yo6s7OP7yaDglbqo1J04qKzAhqBH6lvTonzMVmEdcZw=
 google.golang.org/grpc v1.15.0 h1:Az/KuahOM4NAidTEuJCv/RonAA7rYsTPkqXVjr+8OOw=
 google.golang.org/grpc v1.15.0/go.mod h1:0JHn/cJsOMiMfNA9+DeHDlAU7KAAB5GDlYFpa9MZMio=

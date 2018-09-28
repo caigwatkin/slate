@@ -6,7 +6,7 @@ cloud.google.com/go/internal/optional
 cloud.google.com/go/internal/trace
 cloud.google.com/go/internal/version
 cloud.google.com/go/compute/metadata
-# github.com/caigwatkin/go v0.0.0-20180928232341-08695aa44296
+# github.com/caigwatkin/go v0.0.0-20180928235346-904a7b5d3e2f
 github.com/caigwatkin/go/context
 github.com/caigwatkin/go/http
 github.com/caigwatkin/go/log
@@ -90,7 +90,7 @@ google.golang.org/appengine/internal/base
 google.golang.org/appengine/internal/datastore
 google.golang.org/appengine/internal/log
 google.golang.org/appengine/internal/remote_api
-# google.golang.org/genproto v0.0.0-20180925191851-0e822944c569
+# google.golang.org/genproto v0.0.0-20180928223349-c7e5094acea1
 google.golang.org/genproto/googleapis/iam/v1
 google.golang.org/genproto/googleapis/rpc/code
 google.golang.org/genproto/googleapis/api/annotations
