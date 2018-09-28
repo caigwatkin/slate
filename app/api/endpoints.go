@@ -17,7 +17,7 @@ limitations under the License.
 package api
 
 import (
-	"github.com/caigwatkin/slate/app/slate/routes"
+	"github.com/caigwatkin/slate/app/routes"
 	"github.com/go-chi/chi"
 )
 

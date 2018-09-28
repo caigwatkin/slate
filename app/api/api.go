@@ -22,18 +22,16 @@ import (
 
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
-	go_secrets "github.com/caigwatkin/go/secrets"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 )
 
 type Client struct {
-	config        Config
-	httpClient    go_http.Client
-	logClient     go_log.Client
-	secretsClient go_secrets.Client
-	router        *chi.Mux
-	serviceName   string
+	config      Config
+	httpClient  go_http.Client
+	logClient   go_log.Client
+	router      *chi.Mux
+	serviceName string
 }
 
 type Config struct {
@@ -42,14 +40,13 @@ type Config struct {
 	Port         string
 }
 
-func NewClient(config Config, httpClient go_http.Client, logClient go_log.Client, secretsClient go_secrets.Client) Client {
+func NewClient(config Config, httpClient go_http.Client, logClient go_log.Client) Client {
 	apiClient := Client{
-		config:        config,
-		httpClient:    httpClient,
-		logClient:     logClient,
-		secretsClient: secretsClient,
-		router:        chi.NewRouter(),
-		serviceName:   "slate",
+		config:      config,
+		httpClient:  httpClient,
+		logClient:   logClient,
+		router:      chi.NewRouter(),
+		serviceName: "slate",
 	}
 	pathForHealthEndpoint := "/health"
 	apiClient.loadMiddleware(pathForHealthEndpoint)
