@@ -15,14 +15,6 @@ go get -u github.com/caigwatkin/slate
 slate -h
 ```
 
-## Project structure
-
-Uses a modified version of the project structure/layout as recommended by [golang standards guide](https://github.com/golang-standards/project-layout)
-
-### Modifications to structure
-
-What would be in the `github.com/xxx/internal/app` package is in `github.com/xxx/app` as the `github.com/xxx/internal/pkg` package is in a separate repo: [github.com/caigwatkin/go](https://github.com/caigwatkin/go). Additionally, `main.go` is in repo root to allow `go get` functionality.
-
 ## CI/CD
 
 Using [Travis CI](https://travis-ci.org) for builds of commits and pull requests.
@@ -32,9 +24,9 @@ All changes are made to branches of `master`. The branch must be up to date with
 The following status checks must pass before merging into master:
 
 - [Travis CI](https://travis-ci.org) build passes
-- [Codecov](https://codecov.io) meets minimum coverage requirements
+- [Codecov](https://codecov.io) coverage checked, not required yet as there are no tests
 - [GolangCI](https://golangci.com) finds no issues
 
 ## Dependency management
 
-Using [Go 1.11 Modules](https://github.com/golang/go/wiki/Modules)
+[Go 1.11 Modules](https://github.com/golang/go/wiki/Modules)
