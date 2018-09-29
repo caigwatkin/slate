@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
 # Run from repo root:
-# $ ./scripts/go/start.sh [cmd]
+# $ ./scripts/go/start.sh
 
 SCRIPT_DIR="$( cd "$(dirname "$0")" ; pwd -P )"
 SCRIPT_DIR_NAME=${SCRIPT_DIR##*/}
@@ -29,9 +29,5 @@ echo "Testing..."
 go test -mod=vendor ${API}/...
 echo
 
-echo "Building..."
-go build -mod=vendor -o bin/${API}
-echo
-
 echo "Running..."
-./bin/${API}
+go run -mod=vendor ${API}

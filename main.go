@@ -24,8 +24,7 @@ import (
 	go_context "github.com/caigwatkin/go/context"
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
-	go_secrets "github.com/caigwatkin/go/secrets"
-	"github.com/caigwatkin/slate/app/slate/api"
+	"github.com/caigwatkin/slate/app/api"
 )
 
 var (
@@ -58,13 +57,6 @@ func main() {
 		go_log.FmtStrings(os.Environ(), "os.Environ()"),
 	)
 
-	logClient.Info(ctx, "Creating secrets client")
-	secretsClient, err := go_secrets.NewClient(ctx)
-	if err != nil {
-		logClient.Fatal(ctx, "Failed creating secrets client", go_log.FmtError(err))
-	}
-	logClient.Info(ctx, "Created secrets client")
-
 	logClient.Info(ctx, "Creating http client")
 	httpClient := go_http.NewClient(logClient, "Slate")
 	logClient.Info(ctx, "Created http client")
@@ -74,7 +66,7 @@ func main() {
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
-	}, httpClient, logClient, secretsClient)
+	}, httpClient, logClient)
 	logClient.Info(ctx, "Created API client")
 
 	if err := apiClient.ListenAndServe(ctx); err != nil {
