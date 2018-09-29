@@ -29,9 +29,5 @@ echo "Testing..."
 go test -mod=vendor ${API}/...
 echo
 
-echo "Building..."
-go build -mod=vendor -o bin/${API}
-echo
-
 echo "Running..."
-./bin/${API}
+go run -mod=vendor ${API}
