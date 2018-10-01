@@ -17,21 +17,26 @@ limitations under the License.
 package api
 
 import (
-	"context"
 	"net/http"
 
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
+	"github.com/caigwatkin/slate/app/data/firestore"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 )
 
-type Client struct {
-	config      Config
-	httpClient  go_http.Client
-	logClient   go_log.Client
-	router      *chi.Mux
-	serviceName string
+type Client interface {
+	ListenAndServe() error
+}
+
+type client struct {
+	config          Config
+	firestoreClient firestore.Client
+	httpClient      go_http.Client
+	logClient       go_log.Client
+	router          *chi.Mux
+	serviceName     string
 }
 
 type Config struct {
@@ -40,28 +45,27 @@ type Config struct {
 	Port         string
 }
 
-func NewClient(config Config, httpClient go_http.Client, logClient go_log.Client) Client {
-	apiClient := Client{
-		config:      config,
-		httpClient:  httpClient,
-		logClient:   logClient,
-		router:      chi.NewRouter(),
-		serviceName: "slate",
+func NewClient(config Config, firestoreClient firestore.Client, httpClient go_http.Client, logClient go_log.Client) Client {
+	c := client{
+		config:          config,
+		firestoreClient: firestoreClient,
+		httpClient:      httpClient,
+		logClient:       logClient,
+		router:          chi.NewRouter(),
+		serviceName:     "slate",
 	}
 	pathForHealthEndpoint := "/health"
-	apiClient.loadMiddleware(pathForHealthEndpoint)
-	apiClient.loadEndpoints(pathForHealthEndpoint)
-	return apiClient
+	c.loadMiddleware(pathForHealthEndpoint)
+	c.loadEndpoints(pathForHealthEndpoint)
+	return c
 }
 
-func (api Client) loadMiddleware(pathForHealthEndpoint string) {
-	api.httpClient.MiddlewareDefaults(api.router, []string{pathForHealthEndpoint})
+func (c client) loadMiddleware(pathForHealthEndpoint string) {
+	c.httpClient.MiddlewareDefaults(c.router, []string{pathForHealthEndpoint})
 }
 
-func (api Client) ListenAndServe(ctx context.Context) error {
-	api.logClient.Info(ctx, "Listening and serving", go_log.FmtString(api.config.Port, "port"))
-
-	if err := http.ListenAndServe(api.config.Port, api.router); err != nil {
+func (c client) ListenAndServe() error {
+	if err := http.ListenAndServe(c.config.Port, c.router); err != nil {
 		return errors.Wrap(err, "Failed listening and serving")
 	}
 	return nil
