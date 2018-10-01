@@ -19,7 +19,7 @@ firebase.google.com/go/iid
 firebase.google.com/go/internal
 firebase.google.com/go/messaging
 firebase.google.com/go/storage
-# github.com/caigwatkin/go v0.0.0-20181001185112-7d9379963760
+# github.com/caigwatkin/go v0.0.0-20181001190916-09fd5d562758
 github.com/caigwatkin/go/context
 github.com/caigwatkin/go/http
 github.com/caigwatkin/go/log
