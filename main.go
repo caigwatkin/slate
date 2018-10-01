@@ -96,6 +96,7 @@ func main() {
 	if err != nil {
 		logClient.Fatal(ctx, "Failed creating firestore client", go_log.FmtError(err))
 	}
+	defer firestoreClient.Close()
 	logClient.Info(ctx, "Created firestore client")
 
 	logClient.Info(ctx, "Creating API client")
