@@ -52,7 +52,7 @@ func init() {
 	flag.IntVar(&port, "port", 8080, "Port")
 	flag.StringVar(&secretsBucket, "secretsBucket", "slate-api-config", "GCP bucket storing secrets directory")
 	flag.StringVar(&secretsBucketDir, "secretsBucketDir", "secrets", "GCP bucket secrets directory storing secrets")
-	flag.StringVar(&serviceName, "serviceName", "Slate", "Service name in canonical case for header")
+	flag.StringVar(&serviceName, "serviceName", "Slate-Api", "Service name in canonical case for header")
 	flag.Parse()
 }
 

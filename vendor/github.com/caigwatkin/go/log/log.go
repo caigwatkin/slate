@@ -305,7 +305,7 @@ const (
 	severityNotice = iota // Flush, if applicable
 	severityWarn   = iota
 	severityError  = iota
-	severityFatal  = iota
+	severityFatal  = iota // Flush, if applicable
 )
 
 func (c client) output(ctx context.Context, severity int, message string, fields []Field) {

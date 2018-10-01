@@ -7,8 +7,8 @@ firebase.google.com/go v3.4.0+incompatible h1:QjDi5xxlA0k4HtqXYLr4NMrtIfLrXOPlt7
 firebase.google.com/go v3.4.0+incompatible/go.mod h1:xlah6XbEyW6tbfSklcfe5FHJIwjt8toICdV5Wh9ptHs=
 git.apache.org/thrift.git v0.0.0-20180902110319-2566ecd5d999/go.mod h1:fPE2ZNJGynbRyZ4dJvy6G277gSllfV2HJqblrnkyeyg=
 github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24TaqPxmxbtue+5NUziq4I4S80YR8gNf3Q=
-github.com/caigwatkin/go v0.0.0-20181001090904-13c3b0da8e03 h1:KB1UevlAoeHz7OQzJkgDerxjTOBILsESPAFT1nQFjwg=
-github.com/caigwatkin/go v0.0.0-20181001090904-13c3b0da8e03/go.mod h1:zjsMb8BawGgVogxLWi1Zw9xqdMz50UEOtyuoMCayI64=
+github.com/caigwatkin/go v0.0.0-20181001185112-7d9379963760 h1:VByYf43i/Y6k55KnRJ0ZSPN4TQer/H2ULHYnaqR73eM=
+github.com/caigwatkin/go v0.0.0-20181001185112-7d9379963760/go.mod h1:zjsMb8BawGgVogxLWi1Zw9xqdMz50UEOtyuoMCayI64=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
 github.com/go-chi/chi v3.3.3+incompatible h1:KHkmBEMNkwKuK4FdQL7N2wOeB9jnIx7jR5wsuSBEFI8=
 github.com/go-chi/chi v3.3.3+incompatible/go.mod h1:eB3wogJHnLi3x/kFX2A+IbTBlXxmMeXJVKy9tTv1XzQ=

@@ -37,8 +37,8 @@ func NewClient(ctx context.Context, secretsClient go_secrets.Client) (Client, er
 }
 
 const (
-	secretDomainSlateAPI        = "slate-api"
-	secretTypeServiceAccountKey = "service-account-key"
+	secretDomainSlateAPI        = "slate_api_dev"
+	secretTypeServiceAccountKey = "service_account_key"
 )
 
 func RequiredSecrets() go_secrets.Required {
