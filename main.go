@@ -20,26 +20,38 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	go_context "github.com/caigwatkin/go/context"
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
+	go_secrets "github.com/caigwatkin/go/secrets"
 	"github.com/caigwatkin/slate/app/api"
+	"github.com/caigwatkin/slate/app/data/firestore"
 )
 
 var (
-	debug        bool
-	env          string
-	gcpProjectID string
-	port         int
-	serviceName  string
+	cloudkmsKey      string
+	cloudkmsKeyRing  string
+	debug            bool
+	env              string
+	gcpProjectID     string
+	port             int
+	secretsBucket    string
+	secretsBucketDir string
+	serviceName      string
 )
 
 func init() {
 	flag.BoolVar(&debug, "debug", true, "Debug mode on/off")
 	flag.StringVar(&env, "env", "dev", "Deployment environment")
 	flag.StringVar(&gcpProjectID, "gcpProjectID", "slate-00", "GCP project ID")
+	flag.StringVar(&cloudkmsKey, "cloudkmsKey", "slate", "GCP cloud KMS key")
+	flag.StringVar(&cloudkmsKeyRing, "cloudkmsKeyRing", "slate", "GCP cloud KMS key ring")
 	flag.IntVar(&port, "port", 8080, "Port")
+	flag.StringVar(&secretsBucket, "secretsBucket", "slate-api-config", "GCP bucket storing secrets directory")
+	flag.StringVar(&secretsBucketDir, "secretsBucketDir", "secrets", "GCP bucket secrets directory storing secrets")
 	flag.StringVar(&serviceName, "serviceName", "Slate", "Service name in canonical case for header")
 	flag.Parse()
 }
@@ -52,7 +64,11 @@ func main() {
 		go_log.FmtBool(debug, "debug"),
 		go_log.FmtString(env, "env"),
 		go_log.FmtString(gcpProjectID, "gcpProjectID"),
+		go_log.FmtString(cloudkmsKey, "cloudkmsKey"),
+		go_log.FmtString(cloudkmsKeyRing, "cloudkmsKeyRing"),
 		go_log.FmtInt(port, "port"),
+		go_log.FmtString(secretsBucket, "secretsBucket"),
+		go_log.FmtString(secretsBucketDir, "secretsBucketDir"),
 		go_log.FmtString(serviceName, "serviceName"),
 		go_log.FmtStrings(os.Environ(), "os.Environ()"),
 	)
@@ -61,17 +77,52 @@ func main() {
 	httpClient := go_http.NewClient(logClient, "Slate")
 	logClient.Info(ctx, "Created http client")
 
+	logClient.Info(ctx, "Creating secrets client")
+	secretsClient, err := go_secrets.NewClient(ctx, env, gcpProjectID, cloudkmsKeyRing, cloudkmsKey)
+	if err != nil {
+		logClient.Fatal(ctx, "Failed creating secrets client", go_log.FmtError(err))
+	}
+	logClient.Info(ctx, "Created secrets client")
+
+	requiredSecrets := firestore.RequiredSecrets()
+	logClient.Info(ctx, "Dowloading required secrets", go_log.FmtAny(requiredSecrets, "requiredSecrets"))
+	if err := secretsClient.DownloadAndDecryptAndCache(ctx, secretsBucket, secretsBucketDir, requiredSecrets); err != nil {
+		logClient.Fatal(ctx, "Failed downloading and decrypting and caching required secrets", go_log.FmtError(err))
+	}
+	logClient.Info(ctx, "Dowloaded required secrets")
+
+	logClient.Info(ctx, "Creating firestore client")
+	firestoreClient, err := firestore.NewClient(ctx, secretsClient)
+	if err != nil {
+		logClient.Fatal(ctx, "Failed creating firestore client", go_log.FmtError(err))
+	}
+	logClient.Info(ctx, "Created firestore client")
+
 	logClient.Info(ctx, "Creating API client")
 	apiClient := api.NewClient(api.Config{
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
-	}, httpClient, logClient)
+	}, firestoreClient, httpClient, logClient)
 	logClient.Info(ctx, "Created API client")
 
-	if err := apiClient.ListenAndServe(ctx); err != nil {
-		logClient.Fatal(ctx, "Slate client unexpectedly returned with error from listening and serving; terminating", go_log.FmtError(err))
+	logClient.Info(ctx, "Preparing clean up")
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		ctx := go_context.ShutDown()
+		logClient.Notice(ctx, "Cleaning up")
+		firestoreClient.Close()
+		logClient.Notice(ctx, "Cleaned up")
+		os.Exit(2)
+	}()
+	logClient.Info(ctx, "Prepared clean up")
+
+	logClient.Info(ctx, "Listening and serving", go_log.FmtInt(port, "port"))
+	if err := apiClient.ListenAndServe(); err != nil {
+		logClient.Fatal(ctx, "API client unexpectedly returned with error from listening and serving; terminating", go_log.FmtError(err))
 		return
 	}
-	logClient.Fatal(ctx, "Slate client unexpectedly returned from listening and serving; terminating")
+	logClient.Fatal(ctx, "API client unexpectedly returned from listening and serving; terminating")
 }

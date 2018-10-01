@@ -21,7 +21,7 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func (api *Client) loadEndpoints(pathForHealthEndpoint string) {
+func (api *client) loadEndpoints(pathForHealthEndpoint string) {
 	router := api.router
 	router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
 	router.Route("/hellos", func(router chi.Router) {
