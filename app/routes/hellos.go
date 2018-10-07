@@ -22,30 +22,36 @@ import (
 
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
+	"github.com/caigwatkin/slate/app/data/firestore"
 	"github.com/go-chi/chi"
+	"github.com/pkg/errors"
 )
 
-func CreateHello(httpClient go_http.Client, logClient go_log.Client) http.HandlerFunc {
+func CreateHello(httpClient go_http.Client, logClient go_log.Client, firestoreClient firestore.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		logClient.Info(ctx, "Creating")
 
-		httpClient.RenderCreated(ctx, w, "some_id")
+		location, err := firestoreClient.CreateHello(ctx)
+		if err != nil {
+			httpClient.RenderErrorOrStatus(ctx, w, errors.Wrap(err, "Failed creating hello in firestore"))
+		}
+		httpClient.RenderCreated(ctx, w, location)
 	}
 }
 
-func ReadHelloByID(httpClient go_http.Client, logClient go_log.Client) http.HandlerFunc {
+func ReadHello(httpClient go_http.Client, logClient go_log.Client, firestoreClient firestore.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		logClient.Info(ctx, "Reading")
 
-		helloID := chi.URLParam(r, "hello_id")
-		b, err := json.MarshalIndent(map[string]string{
-			"hello": "world",
-			"id":    helloID,
-		}, "", "\t")
+		hello, err := firestoreClient.ReadHello(ctx, chi.URLParam(r, "hello_id"))
 		if err != nil {
-			httpClient.RenderErrorOrStatus(ctx, w, err)
+			httpClient.RenderErrorOrStatus(ctx, w, errors.Wrap(err, "Failed reading hello from firestore"))
+		}
+		b, err := json.Marshal(hello)
+		if err != nil {
+			httpClient.RenderErrorOrStatus(ctx, w, errors.Wrap(err, "Failed marshalling hello"))
 		}
 		httpClient.RenderContentJSON(ctx, w, b)
 	}
