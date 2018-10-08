@@ -25,9 +25,9 @@ func (api *client) loadEndpoints(pathForHealthEndpoint string) {
 	router := api.router
 	router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
 	router.Route("/hellos", func(router chi.Router) {
-		router.Post("/", routes.CreateHello(api.httpClient, api.logClient))
+		router.Post("/", routes.CreateHello(api.httpClient, api.logClient, api.firestoreClient))
 		router.Route("/{hello_id}", func(router chi.Router) {
-			router.Get("/", routes.ReadHelloByID(api.httpClient, api.logClient))
+			router.Get("/", routes.ReadHello(api.httpClient, api.logClient, api.firestoreClient))
 		})
 	})
 }

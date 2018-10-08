@@ -12,6 +12,8 @@ import (
 
 type Client interface {
 	Close()
+	CreateHello(ctx context.Context) (string, error)
+	ReadHello(ctx context.Context, id string) (map[string]interface{}, error)
 }
 
 type client struct {

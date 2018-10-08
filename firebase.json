@@ -1,0 +1,6 @@
+{
+  "firestore": {
+    "rules": "./configs/firestore.rules",
+    "indexes": "./configs/firestore.indexes.json"
+  }
+}
