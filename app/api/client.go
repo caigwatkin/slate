@@ -34,7 +34,6 @@ type client struct {
 	httpClient   go_http.Client
 	routesClient routes.Client
 	router       *chi.Mux
-	serviceName  string
 }
 
 type Config struct {
