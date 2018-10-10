@@ -1,4 +1,4 @@
-# cloud.google.com/go v0.29.0
+# cloud.google.com/go v0.30.0
 cloud.google.com/go/firestore
 cloud.google.com/go/storage
 cloud.google.com/go/firestore/apiv1beta1
@@ -19,7 +19,7 @@ firebase.google.com/go/iid
 firebase.google.com/go/internal
 firebase.google.com/go/messaging
 firebase.google.com/go/storage
-# github.com/caigwatkin/go v0.0.0-20181001195604-3ce36c94a51a
+# github.com/caigwatkin/go v0.0.0-20181009191928-c5bc2d832fdd
 github.com/caigwatkin/go/context
 github.com/caigwatkin/go/http
 github.com/caigwatkin/go/log

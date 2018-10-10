@@ -28,7 +28,8 @@ import (
 	go_log "github.com/caigwatkin/go/log"
 	go_secrets "github.com/caigwatkin/go/secrets"
 	"github.com/caigwatkin/slate/app/api"
-	"github.com/caigwatkin/slate/app/data/firestore"
+	"github.com/caigwatkin/slate/app/data"
+	"github.com/caigwatkin/slate/app/routes"
 )
 
 var (
@@ -84,27 +85,31 @@ func main() {
 	}
 	logClient.Info(ctx, "Created secrets client")
 
-	requiredSecrets := firestore.RequiredSecrets()
+	requiredSecrets := data.RequiredSecrets()
 	logClient.Info(ctx, "Dowloading required secrets", go_log.FmtAny(requiredSecrets, "requiredSecrets"))
 	if err := secretsClient.DownloadAndDecryptAndCache(ctx, secretsBucket, secretsBucketDir, requiredSecrets); err != nil {
 		logClient.Fatal(ctx, "Failed downloading and decrypting and caching required secrets", go_log.FmtError(err))
 	}
 	logClient.Info(ctx, "Dowloaded required secrets")
 
-	logClient.Info(ctx, "Creating firestore client")
-	firestoreClient, err := firestore.NewClient(ctx, secretsClient)
+	logClient.Info(ctx, "Creating data client")
+	dataClient, err := data.NewClient(ctx, logClient, secretsClient)
 	if err != nil {
-		logClient.Fatal(ctx, "Failed creating firestore client", go_log.FmtError(err))
+		logClient.Fatal(ctx, "Failed creating data client", go_log.FmtError(err))
 	}
-	defer firestoreClient.Close()
-	logClient.Info(ctx, "Created firestore client")
+	defer dataClient.Close()
+	logClient.Info(ctx, "Created data client")
+
+	logClient.Info(ctx, "Creating routes client")
+	routesClient := routes.NewClient(dataClient, httpClient, logClient, serviceName)
+	logClient.Info(ctx, "Created routes client")
 
 	logClient.Info(ctx, "Creating API client")
 	apiClient := api.NewClient(api.Config{
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
-	}, firestoreClient, httpClient, logClient)
+	}, httpClient, routesClient)
 	logClient.Info(ctx, "Created API client")
 
 	logClient.Info(ctx, "Preparing clean up")
@@ -114,7 +119,7 @@ func main() {
 		<-c
 		ctx := go_context.ShutDown()
 		logClient.Notice(ctx, "Cleaning up")
-		firestoreClient.Close()
+		dataClient.Close()
 		logClient.Notice(ctx, "Cleaned up")
 		os.Exit(2)
 	}()

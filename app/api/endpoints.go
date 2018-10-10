@@ -17,17 +17,16 @@ limitations under the License.
 package api
 
 import (
-	"github.com/caigwatkin/slate/app/routes"
 	"github.com/go-chi/chi"
 )
 
-func (api *client) loadEndpoints(pathForHealthEndpoint string) {
-	router := api.router
-	router.Get(pathForHealthEndpoint, routes.Health(api.httpClient, api.serviceName))
-	router.Route("/hellos", func(router chi.Router) {
-		router.Post("/", routes.CreateHello(api.httpClient, api.logClient, api.firestoreClient))
-		router.Route("/{hello_id}", func(router chi.Router) {
-			router.Get("/", routes.ReadHello(api.httpClient, api.logClient, api.firestoreClient))
+func (c *client) loadEndpoints(pathForHealthEndpoint string) {
+	router := c.router
+	router.Get(pathForHealthEndpoint, c.routesClient.Health())
+	router.Route("/greetings", func(router chi.Router) {
+		router.Post("/", c.routesClient.CreateGreeting())
+		router.Route("/{greeting_id}", func(router chi.Router) {
+			router.Get("/", c.routesClient.ReadGreeting())
 		})
 	})
 }

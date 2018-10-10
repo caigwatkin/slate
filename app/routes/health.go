@@ -18,12 +18,10 @@ package routes
 
 import (
 	"net/http"
-
-	go_http "github.com/caigwatkin/go/http"
 )
 
-func Health(httpClient go_http.Client, serviceName string) http.HandlerFunc {
+func (c client) Health() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		httpClient.RenderHealth(r.Context(), w, serviceName)
+		c.httpClient.RenderHealth(r.Context(), w, c.serviceName)
 	}
 }
