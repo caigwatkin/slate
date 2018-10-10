@@ -20,8 +20,7 @@ import (
 	"net/http"
 
 	go_http "github.com/caigwatkin/go/http"
-	go_log "github.com/caigwatkin/go/log"
-	"github.com/caigwatkin/slate/app/data/firestore"
+	"github.com/caigwatkin/slate/app/routes"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 )
@@ -31,12 +30,10 @@ type Client interface {
 }
 
 type client struct {
-	config          Config
-	firestoreClient firestore.Client
-	httpClient      go_http.Client
-	logClient       go_log.Client
-	router          *chi.Mux
-	serviceName     string
+	config       Config
+	httpClient   go_http.Client
+	routesClient routes.Client
+	router       *chi.Mux
 }
 
 type Config struct {
@@ -45,14 +42,12 @@ type Config struct {
 	Port         string
 }
 
-func NewClient(config Config, firestoreClient firestore.Client, httpClient go_http.Client, logClient go_log.Client) Client {
+func NewClient(config Config, httpClient go_http.Client, routesClient routes.Client) Client {
 	c := client{
-		config:          config,
-		firestoreClient: firestoreClient,
-		httpClient:      httpClient,
-		logClient:       logClient,
-		router:          chi.NewRouter(),
-		serviceName:     "slate",
+		config:       config,
+		httpClient:   httpClient,
+		routesClient: routesClient,
+		router:       chi.NewRouter(),
 	}
 	pathForHealthEndpoint := "/health"
 	c.loadMiddleware(pathForHealthEndpoint)

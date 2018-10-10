@@ -84,7 +84,9 @@ func Status(ctx context.Context, headersClient go_headers.Client, logClient go_l
 	h := setHeadersInclDefaults(ctx, headersClient, w, map[string]string{
 		"Content-Type": "application/json",
 	})
+	logStatus(ctx, logClient, s)
 	body := s.Render()
+	body = append(body, byte('\n'))
 	w.WriteHeader(s.Code)
 	lenBody, err := w.Write(body)
 	if err != nil {
@@ -100,6 +102,7 @@ func ErrorOrStatus(ctx context.Context, headersClient go_headers.Client, logClie
 		Status(ctx, headersClient, logClient, w, v)
 		return
 	}
+	logError(ctx, logClient, err)
 	h := setHeadersInclDefaults(ctx, headersClient, w, nil)
 	code := http.StatusInternalServerError
 	w.WriteHeader(code)
