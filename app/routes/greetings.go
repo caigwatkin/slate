@@ -36,6 +36,18 @@ func (c client) CreateGreeting() http.HandlerFunc {
 	}
 }
 
+func (c client) DeleteGreeting() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		c.logClient.Info(ctx, "Deleting")
+		if err := c.dataClient.DeleteGreeting(ctx, chi.URLParam(r, "greeting_id")); err != nil {
+			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed deleting greeting using data client"))
+			return
+		}
+		c.httpClient.RenderNoContent(ctx, w)
+	}
+}
+
 func (c client) ReadGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
