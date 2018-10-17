@@ -31,6 +31,7 @@ type Client interface {
 
 type GreetingsClient interface {
 	CreateGreeting() http.HandlerFunc
+	DeleteGreeting() http.HandlerFunc
 	ReadGreeting() http.HandlerFunc
 }
 

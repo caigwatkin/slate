@@ -30,6 +30,7 @@ import (
 type Client interface {
 	Close()
 	CreateGreeting(ctx context.Context, message string) (string, error)
+	DeleteGreeting(ctx context.Context, id string) error
 	ReadGreeting(ctx context.Context, id string) (*Greeting, error)
 }
 

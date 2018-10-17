@@ -27,6 +27,7 @@ func (c *client) loadEndpoints(pathForHealthEndpoint string) {
 		router.Post("/", c.routesClient.CreateGreeting())
 		router.Route("/{greeting_id}", func(router chi.Router) {
 			router.Get("/", c.routesClient.ReadGreeting())
+			router.Delete("/", c.routesClient.DeleteGreeting())
 		})
 	})
 }

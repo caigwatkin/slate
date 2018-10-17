@@ -32,6 +32,14 @@ type Greeting struct {
 	Message string `json:"message,omitempty"`
 }
 
+func (g Greeting) Render() ([]byte, error) {
+	b, err := json.MarshalIndent(g, "", "\t")
+	if err != nil {
+		return nil, go_errors.Wrap(err, "Failed unmarshalling data bytes into Greeting")
+	}
+	return b, nil
+}
+
 func (c client) CreateGreeting(ctx context.Context, message string) (id string, err error) {
 	c.logClient.Info(ctx, "Creating", go_log.FmtString(message, "message"))
 	g, err := createGreetingData(message)
@@ -47,6 +55,34 @@ func (c client) CreateGreeting(ctx context.Context, message string) (id string, 
 	id = documentRef.ID
 	c.logClient.Info(ctx, "Created", go_log.FmtString(id, "id"))
 	return
+}
+
+func createGreetingData(message string) (map[string]interface{}, error) {
+	g := Greeting{
+		Message: message,
+	}
+	b, err := json.Marshal(g)
+	if err != nil {
+		return nil, go_errors.Wrap(err, "Failed unmarshalling greeting")
+	}
+	gm := make(map[string]interface{})
+	if err := json.Unmarshal(b, &gm); err != nil {
+		return nil, go_errors.Wrap(err, "Failed unmarshalling greeting bytes into map[string]interface{}")
+	}
+	return gm, nil
+}
+
+func (c client) DeleteGreeting(ctx context.Context, id string) error {
+	c.logClient.Info(ctx, "Deleting", go_log.FmtString(id, "id"))
+	documentRef := c.firestoreClient.Collection("greeting").Doc(id)
+	if documentRef == nil {
+		return go_errors.Errorf("Failed getting document reference for id %q", id)
+	}
+	if _, err := documentRef.Delete(ctx); err != nil {
+		return go_errors.Errorf("Failed deleting document by reference")
+	}
+	c.logClient.Info(ctx, "Deleted")
+	return nil
 }
 
 func (c client) ReadGreeting(ctx context.Context, id string) (*Greeting, error) {
@@ -70,21 +106,6 @@ func (c client) ReadGreeting(ctx context.Context, id string) (*Greeting, error) 
 	return greeting, nil
 }
 
-func createGreetingData(message string) (map[string]interface{}, error) {
-	g := Greeting{
-		Message: message,
-	}
-	b, err := json.Marshal(g)
-	if err != nil {
-		return nil, go_errors.Wrap(err, "Failed unmarshalling greeting")
-	}
-	gm := make(map[string]interface{})
-	if err := json.Unmarshal(b, &gm); err != nil {
-		return nil, go_errors.Wrap(err, "Failed unmarshalling greeting bytes into map[string]interface{}")
-	}
-	return gm, nil
-}
-
 func greetingFromDocSnapshotData(data map[string]interface{}) (*Greeting, error) {
 	b, err := json.Marshal(data)
 	if err != nil {
@@ -95,12 +116,4 @@ func greetingFromDocSnapshotData(data map[string]interface{}) (*Greeting, error)
 		return nil, go_errors.Wrap(err, "Failed unmarshalling data bytes into Greeting")
 	}
 	return &g, nil
-}
-
-func (g Greeting) Render() ([]byte, error) {
-	b, err := json.MarshalIndent(g, "", "\t")
-	if err != nil {
-		return nil, go_errors.Wrap(err, "Failed unmarshalling data bytes into Greeting")
-	}
-	return b, nil
 }
