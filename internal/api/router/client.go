@@ -14,13 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package routes
+package router
 
 import (
 	"net/http"
 
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
+	"github.com/caigwatkin/slate/internal/api/parser"
 	"github.com/caigwatkin/slate/internal/app"
 )
 
@@ -33,21 +34,23 @@ type Client interface {
 }
 
 type client struct {
-	config     Config
-	appClient  app.Client
-	httpClient go_http.Client
-	logClient  go_log.Client
+	config       Config
+	appClient    app.Client
+	httpClient   go_http.Client
+	logClient    go_log.Client
+	parserClient parser.Client
 }
 
 type Config struct {
 	ServiceName string
 }
 
-func NewClient(config Config, appClient app.Client, httpClient go_http.Client, logClient go_log.Client) Client {
+func NewClient(config Config, appClient app.Client, httpClient go_http.Client, logClient go_log.Client, parserClient parser.Client) Client {
 	return client{
-		config:     config,
-		appClient:  appClient,
-		httpClient: httpClient,
-		logClient:  logClient,
+		config:       config,
+		appClient:    appClient,
+		httpClient:   httpClient,
+		logClient:    logClient,
+		parserClient: parserClient,
 	}
 }

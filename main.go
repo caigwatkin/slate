@@ -109,6 +109,7 @@ func main() {
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
+		ServiceName:  serviceName,
 	}, appClient, httpClient, logClient)
 	logClient.Info(ctx, "Created API client")
 

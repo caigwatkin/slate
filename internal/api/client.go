@@ -21,7 +21,8 @@ import (
 
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
-	"github.com/caigwatkin/slate/internal/api/routes"
+	"github.com/caigwatkin/slate/internal/api/parser"
+	"github.com/caigwatkin/slate/internal/api/router"
 	"github.com/caigwatkin/slate/internal/app"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
@@ -34,7 +35,7 @@ type Client interface {
 type client struct {
 	config       Config
 	httpClient   go_http.Client
-	routesClient routes.Client
+	routerClient router.Client
 	router       *chi.Mux
 }
 
@@ -49,7 +50,7 @@ func NewClient(config Config, appClient app.Client, httpClient go_http.Client, l
 	c := client{
 		config:       config,
 		httpClient:   httpClient,
-		routesClient: routes.NewClient(routes.Config{ServiceName: config.ServiceName}, appClient, httpClient, logClient),
+		routerClient: router.NewClient(router.Config{ServiceName: config.ServiceName}, appClient, httpClient, logClient, parser.NewClient(logClient)),
 		router:       chi.NewRouter(),
 	}
 	pathForHealthEndpoint := "/health"
@@ -60,12 +61,12 @@ func NewClient(config Config, appClient app.Client, httpClient go_http.Client, l
 
 func (c *client) loadEndpoints(pathForHealthEndpoint string) {
 	router := c.router
-	router.Get(pathForHealthEndpoint, c.routesClient.Health())
+	router.Get(pathForHealthEndpoint, c.routerClient.Health())
 	router.Route("/greetings", func(router chi.Router) {
-		router.Post("/", c.routesClient.CreateGreeting())
+		router.Post("/", c.routerClient.CreateGreeting())
 		router.Route("/{greeting_id}", func(router chi.Router) {
-			router.Get("/", c.routesClient.ReadGreeting())
-			router.Delete("/", c.routesClient.DeleteGreeting())
+			router.Get("/", c.routerClient.ReadGreeting())
+			router.Delete("/", c.routerClient.DeleteGreeting())
 		})
 	})
 }

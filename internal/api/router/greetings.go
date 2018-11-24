@@ -14,23 +14,19 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package routes
+package router
 
 import (
 	"net/http"
 
 	go_errors "github.com/caigwatkin/go/errors"
-	"github.com/caigwatkin/slate/internal/lib/dto"
-	"github.com/go-chi/chi"
 )
 
 func (c client) CreateGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Creating")
-		location, err := c.appClient.CreateGreeting(ctx, dto.CreateGreeting{
-			Message: "hello world",
-		})
+		location, err := c.appClient.CreateGreeting(ctx, c.parserClient.CreateGreeting(r))
 		if err != nil {
 			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed creating greeting using app client"))
 			return
@@ -43,9 +39,12 @@ func (c client) ReadGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Reading")
-		greeting, err := c.appClient.ReadGreeting(ctx, dto.ReadGreeting{
-			ID: chi.URLParam(r, "greeting_id"),
-		})
+		d, err := c.parserClient.ReadGreeting(r)
+		if err != nil {
+			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed parsing read greeting using parser client"))
+			return
+		}
+		greeting, err := c.appClient.ReadGreeting(ctx, *d)
 		if err != nil {
 			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed reading greeting using app client"))
 			return
@@ -58,9 +57,12 @@ func (c client) DeleteGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Deleting")
-		if err := c.appClient.DeleteGreeting(ctx, dto.DeleteGreeting{
-			ID: chi.URLParam(r, "greeting_id"),
-		}); err != nil {
+		d, err := c.parserClient.DeleteGreeting(r)
+		if err != nil {
+			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed parsing delete greeting using parser client"))
+			return
+		}
+		if err := c.appClient.DeleteGreeting(ctx, *d); err != nil {
 			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed deleting greeting using app client"))
 			return
 		}
