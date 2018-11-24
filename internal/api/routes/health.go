@@ -22,6 +22,6 @@ import (
 
 func (c client) Health() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c.httpClient.RenderHealth(r.Context(), w, c.serviceName)
+		c.httpClient.RenderHealth(r.Context(), w, c.config.ServiceName)
 	}
 }

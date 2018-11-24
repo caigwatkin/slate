@@ -14,43 +14,30 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package routes
+package app
 
 import (
-	"net/http"
+	"context"
 
-	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
-	"github.com/caigwatkin/slate/app/data"
+	"github.com/caigwatkin/slate/internal/lib/dto"
+	"github.com/caigwatkin/slate/internal/lib/firestore"
 )
 
 type Client interface {
-	HealthClient
-	GreetingsClient
-}
-
-type GreetingsClient interface {
-	CreateGreeting() http.HandlerFunc
-	DeleteGreeting() http.HandlerFunc
-	ReadGreeting() http.HandlerFunc
-}
-
-type HealthClient interface {
-	Health() http.HandlerFunc
+	CreateGreeting(ctx context.Context, d dto.CreateGreeting) (string, error)
+	DeleteGreeting(ctx context.Context, d dto.DeleteGreeting) error
+	ReadGreeting(ctx context.Context, d dto.ReadGreeting) ([]byte, error)
 }
 
 type client struct {
-	dataClient  data.Client
-	httpClient  go_http.Client
-	logClient   go_log.Client
-	serviceName string
+	firestoreClient firestore.Client
+	logClient       go_log.Client
 }
 
-func NewClient(dataClient data.Client, httpClient go_http.Client, logClient go_log.Client, serviceName string) Client {
+func NewClient(firestoreClient firestore.Client, logClient go_log.Client) Client {
 	return client{
-		dataClient:  dataClient,
-		httpClient:  httpClient,
-		logClient:   logClient,
-		serviceName: serviceName,
+		firestoreClient: firestoreClient,
+		logClient:       logClient,
 	}
 }

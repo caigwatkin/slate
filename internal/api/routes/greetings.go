@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	go_errors "github.com/caigwatkin/go/errors"
+	"github.com/caigwatkin/slate/internal/lib/dto"
 	"github.com/go-chi/chi"
 )
 
@@ -27,24 +28,14 @@ func (c client) CreateGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Creating")
-		location, err := c.dataClient.CreateGreeting(ctx, "hello world")
+		location, err := c.appClient.CreateGreeting(ctx, dto.CreateGreeting{
+			Message: "hello world",
+		})
 		if err != nil {
-			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed creating greeting using data client"))
+			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed creating greeting using app client"))
 			return
 		}
 		c.httpClient.RenderCreated(ctx, w, location)
-	}
-}
-
-func (c client) DeleteGreeting() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		c.logClient.Info(ctx, "Deleting")
-		if err := c.dataClient.DeleteGreeting(ctx, chi.URLParam(r, "greeting_id")); err != nil {
-			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed deleting greeting using data client"))
-			return
-		}
-		c.httpClient.RenderNoContent(ctx, w)
 	}
 }
 
@@ -52,16 +43,27 @@ func (c client) ReadGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Reading")
-		greeting, err := c.dataClient.ReadGreeting(ctx, chi.URLParam(r, "greeting_id"))
+		greeting, err := c.appClient.ReadGreeting(ctx, dto.ReadGreeting{
+			ID: chi.URLParam(r, "greeting_id"),
+		})
 		if err != nil {
-			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed reading greeting from data client"))
+			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed reading greeting using app client"))
 			return
 		}
-		b, err := greeting.Render()
-		if err != nil {
-			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed rendering greeting"))
+		c.httpClient.RenderContentJSON(ctx, w, greeting)
+	}
+}
+
+func (c client) DeleteGreeting() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		c.logClient.Info(ctx, "Deleting")
+		if err := c.appClient.DeleteGreeting(ctx, dto.DeleteGreeting{
+			ID: chi.URLParam(r, "greeting_id"),
+		}); err != nil {
+			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed deleting greeting using app client"))
 			return
 		}
-		c.httpClient.RenderContentJSON(ctx, w, b)
+		c.httpClient.RenderNoContent(ctx, w)
 	}
 }
