@@ -19,7 +19,6 @@ package parser
 import (
 	"net/http"
 
-	go_errors "github.com/caigwatkin/go/errors"
 	go_log "github.com/caigwatkin/go/log"
 	"github.com/caigwatkin/slate/internal/lib/dto"
 	"github.com/go-chi/chi"
@@ -40,7 +39,7 @@ func (c client) ReadGreeting(r *http.Request) (*dto.ReadGreeting, error) {
 	c.logClient.Info(ctx, "Parsing")
 	id := chi.URLParam(r, "greeting_id")
 	if id == "" {
-		return nil, go_errors.NewStatus(http.StatusBadRequest, "greeting_id")
+		return nil, missingURLParam("greeting_id")
 	}
 	d := dto.ReadGreeting{
 		ID: id,
@@ -54,7 +53,7 @@ func (c client) DeleteGreeting(r *http.Request) (*dto.DeleteGreeting, error) {
 	c.logClient.Info(ctx, "Parsing")
 	id := chi.URLParam(r, "greeting_id")
 	if id == "" {
-		return nil, go_errors.NewStatus(http.StatusBadRequest, "greeting_id")
+		return nil, missingURLParam("greeting_id")
 	}
 	d := dto.DeleteGreeting{
 		ID: id,
