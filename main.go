@@ -27,9 +27,9 @@ import (
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
 	go_secrets "github.com/caigwatkin/go/secrets"
-	"github.com/caigwatkin/slate/app/api"
-	"github.com/caigwatkin/slate/app/data"
-	"github.com/caigwatkin/slate/app/routes"
+	"github.com/caigwatkin/slate/internal/api"
+	"github.com/caigwatkin/slate/internal/app"
+	"github.com/caigwatkin/slate/internal/lib/firestore"
 )
 
 var (
@@ -85,31 +85,32 @@ func main() {
 	}
 	logClient.Info(ctx, "Created secrets client")
 
-	requiredSecrets := data.RequiredSecrets()
+	requiredSecrets := firestore.RequiredSecrets()
 	logClient.Info(ctx, "Dowloading required secrets", go_log.FmtAny(requiredSecrets, "requiredSecrets"))
 	if err := secretsClient.DownloadAndDecryptAndCache(ctx, secretsBucket, secretsBucketDir, requiredSecrets); err != nil {
 		logClient.Fatal(ctx, "Failed downloading and decrypting and caching required secrets", go_log.FmtError(err))
 	}
 	logClient.Info(ctx, "Dowloaded required secrets")
 
-	logClient.Info(ctx, "Creating data client")
-	dataClient, err := data.NewClient(ctx, logClient, secretsClient)
+	logClient.Info(ctx, "Creating firestore client")
+	firestoreClient, err := firestore.NewClient(ctx, logClient, secretsClient)
 	if err != nil {
-		logClient.Fatal(ctx, "Failed creating data client", go_log.FmtError(err))
+		logClient.Fatal(ctx, "Failed creating firestore client", go_log.FmtError(err))
 	}
-	defer dataClient.Close()
-	logClient.Info(ctx, "Created data client")
+	defer firestoreClient.Close()
+	logClient.Info(ctx, "Created firestore client")
 
-	logClient.Info(ctx, "Creating routes client")
-	routesClient := routes.NewClient(dataClient, httpClient, logClient, serviceName)
-	logClient.Info(ctx, "Created routes client")
+	logClient.Info(ctx, "Creating app client")
+	appClient := app.NewClient(firestoreClient, logClient)
+	logClient.Info(ctx, "Created app client")
 
 	logClient.Info(ctx, "Creating API client")
 	apiClient := api.NewClient(api.Config{
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
-	}, httpClient, routesClient)
+		ServiceName:  serviceName,
+	}, appClient, httpClient, logClient)
 	logClient.Info(ctx, "Created API client")
 
 	logClient.Info(ctx, "Preparing clean up")
@@ -119,7 +120,7 @@ func main() {
 		<-c
 		ctx := go_context.ShutDown()
 		logClient.Notice(ctx, "Cleaning up")
-		dataClient.Close()
+		firestoreClient.Close()
 		logClient.Notice(ctx, "Cleaned up")
 		os.Exit(2)
 	}()

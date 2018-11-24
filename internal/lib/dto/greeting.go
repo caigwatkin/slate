@@ -14,20 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package api
+package dto
 
-import (
-	"github.com/go-chi/chi"
-)
+type CreateGreeting struct {
+	Message string
+}
 
-func (c *client) loadEndpoints(pathForHealthEndpoint string) {
-	router := c.router
-	router.Get(pathForHealthEndpoint, c.routesClient.Health())
-	router.Route("/greetings", func(router chi.Router) {
-		router.Post("/", c.routesClient.CreateGreeting())
-		router.Route("/{greeting_id}", func(router chi.Router) {
-			router.Get("/", c.routesClient.ReadGreeting())
-			router.Delete("/", c.routesClient.DeleteGreeting())
-		})
-	})
+type ReadGreeting struct {
+	ID string
+}
+
+type DeleteGreeting struct {
+	ID string
 }

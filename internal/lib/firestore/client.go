@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package data
+package firestore
 
 import (
 	"context"
@@ -24,14 +24,17 @@ import (
 	go_errors "github.com/caigwatkin/go/errors"
 	go_log "github.com/caigwatkin/go/log"
 	go_secrets "github.com/caigwatkin/go/secrets"
+	"github.com/caigwatkin/slate/internal/lib/dto"
 	"google.golang.org/api/option"
 )
 
 type Client interface {
 	Close()
-	CreateGreeting(ctx context.Context, message string) (string, error)
-	DeleteGreeting(ctx context.Context, id string) error
-	ReadGreeting(ctx context.Context, id string) (*Greeting, error)
+
+	CreateGreeting(ctx context.Context, d dto.CreateGreeting) (location string, err error)
+	ReadGreeting(ctx context.Context, d dto.ReadGreeting) (*Greeting, error)
+	DeleteGreeting(ctx context.Context, d dto.DeleteGreeting) error
+	RenderGreeting(g Greeting) ([]byte, error)
 }
 
 type client struct {

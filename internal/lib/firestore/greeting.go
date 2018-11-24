@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package data
+package firestore
 
 import (
 	"context"
@@ -23,6 +23,7 @@ import (
 
 	go_errors "github.com/caigwatkin/go/errors"
 	go_log "github.com/caigwatkin/go/log"
+	"github.com/caigwatkin/slate/internal/lib/dto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -32,35 +33,21 @@ type Greeting struct {
 	Message string `json:"message,omitempty"`
 }
 
-func (g Greeting) Render() ([]byte, error) {
-	b, err := json.MarshalIndent(g, "", "\t")
+func newGreeting(d dto.CreateGreeting) Greeting {
+	return Greeting{
+		Message: d.Message,
+	}
+}
+
+func (c client) RenderGreeting(g Greeting) ([]byte, error) {
+	b, err := json.Marshal(g)
 	if err != nil {
-		return nil, go_errors.Wrap(err, "Failed unmarshalling data bytes into Greeting")
+		return nil, go_errors.Wrap(err, "Failed marshalling greeting into bytes")
 	}
 	return b, nil
 }
 
-func (c client) CreateGreeting(ctx context.Context, message string) (id string, err error) {
-	c.logClient.Info(ctx, "Creating", go_log.FmtString(message, "message"))
-	g, err := createGreetingData(message)
-	if err != nil {
-		err = go_errors.Wrap(err, "Failed converting greeting to map")
-		return
-	}
-	documentRef, _, err := c.firestoreClient.Collection("greeting").Add(ctx, g)
-	if err != nil {
-		err = go_errors.Wrap(err, "Failed adding new greeting to collection")
-		return
-	}
-	id = documentRef.ID
-	c.logClient.Info(ctx, "Created", go_log.FmtString(id, "id"))
-	return
-}
-
-func createGreetingData(message string) (map[string]interface{}, error) {
-	g := Greeting{
-		Message: message,
-	}
+func (g Greeting) toMap() (map[string]interface{}, error) {
 	b, err := json.Marshal(g)
 	if err != nil {
 		return nil, go_errors.Wrap(err, "Failed unmarshalling greeting")
@@ -72,24 +59,28 @@ func createGreetingData(message string) (map[string]interface{}, error) {
 	return gm, nil
 }
 
-func (c client) DeleteGreeting(ctx context.Context, id string) error {
-	c.logClient.Info(ctx, "Deleting", go_log.FmtString(id, "id"))
-	documentRef := c.firestoreClient.Collection("greeting").Doc(id)
-	if documentRef == nil {
-		return go_errors.Errorf("Failed getting document reference for id %q", id)
+func (c client) CreateGreeting(ctx context.Context, d dto.CreateGreeting) (location string, err error) {
+	c.logClient.Info(ctx, "Creating", go_log.FmtAny(d, "d"))
+	g, err := newGreeting(d).toMap()
+	if err != nil {
+		err = go_errors.Wrap(err, "Failed converting greeting to map")
+		return
 	}
-	if _, err := documentRef.Delete(ctx); err != nil {
-		return go_errors.Errorf("Failed deleting document by reference")
+	documentRef, _, err := c.firestoreClient.Collection("greeting").Add(ctx, g)
+	if err != nil {
+		err = go_errors.Wrap(err, "Failed adding new greeting to collection")
+		return
 	}
-	c.logClient.Info(ctx, "Deleted")
-	return nil
+	location = documentRef.ID
+	c.logClient.Info(ctx, "Created", go_log.FmtString(location, "location"))
+	return
 }
 
-func (c client) ReadGreeting(ctx context.Context, id string) (*Greeting, error) {
-	c.logClient.Info(ctx, "Reading", go_log.FmtString(id, "id"))
-	documentRef := c.firestoreClient.Collection("greeting").Doc(id)
+func (c client) ReadGreeting(ctx context.Context, d dto.ReadGreeting) (*Greeting, error) {
+	c.logClient.Info(ctx, "Reading", go_log.FmtAny(d, "d"))
+	documentRef := c.firestoreClient.Collection("greeting").Doc(d.ID)
 	if documentRef == nil {
-		return nil, go_errors.Errorf("Failed getting document reference for id %q", id)
+		return nil, go_errors.Errorf("Failed getting document reference for d.ID %q", d.ID)
 	}
 	documentSnapshot, err := documentRef.Get(ctx)
 	if err != nil {
@@ -116,4 +107,17 @@ func greetingFromDocSnapshotData(data map[string]interface{}) (*Greeting, error)
 		return nil, go_errors.Wrap(err, "Failed unmarshalling data bytes into Greeting")
 	}
 	return &g, nil
+}
+
+func (c client) DeleteGreeting(ctx context.Context, d dto.DeleteGreeting) error {
+	c.logClient.Info(ctx, "Deleting", go_log.FmtAny(d, "d"))
+	documentRef := c.firestoreClient.Collection("greeting").Doc(d.ID)
+	if documentRef == nil {
+		return go_errors.Errorf("Failed getting document reference for id %q", d.ID)
+	}
+	if _, err := documentRef.Delete(ctx); err != nil {
+		return go_errors.Errorf("Failed deleting document by reference")
+	}
+	c.logClient.Info(ctx, "Deleted")
+	return nil
 }

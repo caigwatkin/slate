@@ -20,7 +20,10 @@ import (
 	"net/http"
 
 	go_http "github.com/caigwatkin/go/http"
-	"github.com/caigwatkin/slate/app/routes"
+	go_log "github.com/caigwatkin/go/log"
+	"github.com/caigwatkin/slate/internal/api/parser"
+	"github.com/caigwatkin/slate/internal/api/router"
+	"github.com/caigwatkin/slate/internal/app"
 	"github.com/go-chi/chi"
 	"github.com/pkg/errors"
 )
@@ -32,7 +35,7 @@ type Client interface {
 type client struct {
 	config       Config
 	httpClient   go_http.Client
-	routesClient routes.Client
+	routerClient router.Client
 	router       *chi.Mux
 }
 
@@ -40,19 +43,32 @@ type Config struct {
 	Env          string
 	GCPProjectID string
 	Port         string
+	ServiceName  string
 }
 
-func NewClient(config Config, httpClient go_http.Client, routesClient routes.Client) Client {
+func NewClient(config Config, appClient app.Client, httpClient go_http.Client, logClient go_log.Client) Client {
 	c := client{
 		config:       config,
 		httpClient:   httpClient,
-		routesClient: routesClient,
+		routerClient: router.NewClient(router.Config{ServiceName: config.ServiceName}, appClient, httpClient, logClient, parser.NewClient(logClient)),
 		router:       chi.NewRouter(),
 	}
 	pathForHealthEndpoint := "/health"
 	c.loadMiddleware(pathForHealthEndpoint)
 	c.loadEndpoints(pathForHealthEndpoint)
 	return c
+}
+
+func (c *client) loadEndpoints(pathForHealthEndpoint string) {
+	router := c.router
+	router.Get(pathForHealthEndpoint, c.routerClient.Health())
+	router.Route("/greetings", func(router chi.Router) {
+		router.Post("/", c.routerClient.CreateGreeting())
+		router.Route("/{greeting_id}", func(router chi.Router) {
+			router.Get("/", c.routerClient.ReadGreeting())
+			router.Delete("/", c.routerClient.DeleteGreeting())
+		})
+	})
 }
 
 func (c client) loadMiddleware(pathForHealthEndpoint string) {

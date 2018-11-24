@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package routes
+package router
 
 import (
 	"net/http"
@@ -22,6 +22,6 @@ import (
 
 func (c client) Health() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c.httpClient.RenderHealth(r.Context(), w, c.serviceName)
+		c.httpClient.RenderHealth(r.Context(), w, c.config.ServiceName)
 	}
 }
