@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package router
+package routes
 
 import (
 	"net/http"
@@ -26,7 +26,7 @@ func (c client) CreateGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Creating")
-		location, err := c.appClient.CreateGreeting(ctx, c.parserClient.CreateGreeting(r))
+		location, err := c.appClient.CreateGreeting(ctx, c.parserClient.ParseCreateGreeting(r))
 		if err != nil {
 			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed creating greeting using app client"))
 			return
@@ -39,7 +39,7 @@ func (c client) ReadGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Reading")
-		d, err := c.parserClient.ReadGreeting(r)
+		d, err := c.parserClient.ParseReadGreeting(r)
 		if err != nil {
 			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed parsing read greeting using parser client"))
 			return
@@ -57,7 +57,7 @@ func (c client) DeleteGreeting() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		c.logClient.Info(ctx, "Deleting")
-		d, err := c.parserClient.DeleteGreeting(r)
+		d, err := c.parserClient.ParseDeleteGreeting(r)
 		if err != nil {
 			c.httpClient.RenderErrorOrStatus(ctx, w, go_errors.Wrap(err, "Failed parsing delete greeting using parser client"))
 			return

@@ -14,14 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package router
+package testing
 
 import (
-	"net/http"
+	"encoding/json"
+	"fmt"
 )
 
-func (c client) Health() http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		c.httpClient.RenderHealth(r.Context(), w, c.config.ServiceName)
-	}
+type Error struct {
+	Unexpected string
+	Desc       string
+	At         int
+	Input      interface{}
+	Expected   interface{}
+	Result     interface{}
 }
+
+func Errorf(e Error) string {
+	b, err := json.MarshalIndent(e, "", "\t")
+	if err != nil {
+		return fmt.Sprintf(fmtString, e.Unexpected, e.Desc, e.At)
+	}
+	return string(b)
+}
+
+const fmtString = `{
+	"Unexpected": %q,
+	"Desc": %q,
+	"At": %d,
+	"Input": "potentially unmarshallable",
+	"Expected": "potentially unmarshallable",
+	"Result": "potentially unmarshallable"
+}`

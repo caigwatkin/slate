@@ -24,17 +24,19 @@ import (
 	"github.com/go-chi/chi"
 )
 
-func (c client) CreateGreeting(r *http.Request) dto.CreateGreeting {
+func (c client) ParseCreateGreeting(r *http.Request) dto.CreateGreeting {
 	ctx := r.Context()
 	c.logClient.Info(ctx, "Parsing")
 	d := dto.CreateGreeting{
-		Message: "hello world",
+		UserInput: dto.CreateGreetingUserInput{
+			Message: "message",
+		},
 	}
 	c.logClient.Info(ctx, "Parsed", go_log.FmtAny(d, "d"))
 	return d
 }
 
-func (c client) ReadGreeting(r *http.Request) (*dto.ReadGreeting, error) {
+func (c client) ParseReadGreeting(r *http.Request) (*dto.ReadGreeting, error) {
 	ctx := r.Context()
 	c.logClient.Info(ctx, "Parsing")
 	id := chi.URLParam(r, "greeting_id")
@@ -48,7 +50,7 @@ func (c client) ReadGreeting(r *http.Request) (*dto.ReadGreeting, error) {
 	return &d, nil
 }
 
-func (c client) DeleteGreeting(r *http.Request) (*dto.DeleteGreeting, error) {
+func (c client) ParseDeleteGreeting(r *http.Request) (*dto.DeleteGreeting, error) {
 	ctx := r.Context()
 	c.logClient.Info(ctx, "Parsing")
 	id := chi.URLParam(r, "greeting_id")

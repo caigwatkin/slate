@@ -27,8 +27,8 @@ import (
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
 	go_secrets "github.com/caigwatkin/go/secrets"
-	"github.com/caigwatkin/slate/internal/api"
 	"github.com/caigwatkin/slate/internal/app"
+	"github.com/caigwatkin/slate/internal/http"
 	"github.com/caigwatkin/slate/internal/lib/firestore"
 )
 
@@ -74,9 +74,9 @@ func main() {
 		go_log.FmtStrings(os.Environ(), "os.Environ()"),
 	)
 
-	logClient.Info(ctx, "Creating http client")
-	httpClient := go_http.NewClient(logClient, "Slate")
-	logClient.Info(ctx, "Created http client")
+	logClient.Info(ctx, "Creating go HTTP client")
+	goHTTPClient := go_http.NewClient(logClient, "Slate")
+	logClient.Info(ctx, "Created go HTTP client")
 
 	logClient.Info(ctx, "Creating secrets client")
 	secretsClient, err := go_secrets.NewClient(ctx, env, gcpProjectID, cloudkmsKeyRing, cloudkmsKey)
@@ -104,14 +104,14 @@ func main() {
 	appClient := app.NewClient(firestoreClient, logClient)
 	logClient.Info(ctx, "Created app client")
 
-	logClient.Info(ctx, "Creating API client")
-	apiClient := api.NewClient(api.Config{
+	logClient.Info(ctx, "Creating HTTP client")
+	httpClient := http.NewClient(http.Config{
 		Env:          env,
 		GCPProjectID: gcpProjectID,
 		Port:         fmt.Sprintf(":%d", port),
 		ServiceName:  serviceName,
-	}, appClient, httpClient, logClient)
-	logClient.Info(ctx, "Created API client")
+	}, appClient, goHTTPClient, logClient)
+	logClient.Info(ctx, "Created HTTP client")
 
 	logClient.Info(ctx, "Preparing clean up")
 	c := make(chan os.Signal)
@@ -127,9 +127,9 @@ func main() {
 	logClient.Info(ctx, "Prepared clean up")
 
 	logClient.Info(ctx, "Listening and serving", go_log.FmtInt(port, "port"))
-	if err := apiClient.ListenAndServe(); err != nil {
-		logClient.Fatal(ctx, "API client unexpectedly returned with error from listening and serving; terminating", go_log.FmtError(err))
+	if err := httpClient.ListenAndServe(); err != nil {
+		logClient.Fatal(ctx, "HTTP client unexpectedly returned with error from listening and serving; terminating", go_log.FmtError(err))
 		return
 	}
-	logClient.Fatal(ctx, "API client unexpectedly returned from listening and serving; terminating")
+	logClient.Fatal(ctx, "HTTP client unexpectedly returned from listening and serving; terminating")
 }

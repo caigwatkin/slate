@@ -25,9 +25,9 @@ import (
 )
 
 type Client interface {
-	CreateGreeting(r *http.Request) dto.CreateGreeting
-	ReadGreeting(r *http.Request) (*dto.ReadGreeting, error)
-	DeleteGreeting(r *http.Request) (*dto.DeleteGreeting, error)
+	ParseCreateGreeting(r *http.Request) dto.CreateGreeting
+	ParseReadGreeting(r *http.Request) (*dto.ReadGreeting, error)
+	ParseDeleteGreeting(r *http.Request) (*dto.DeleteGreeting, error)
 }
 
 type client struct {

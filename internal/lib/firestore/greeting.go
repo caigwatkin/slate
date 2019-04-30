@@ -35,7 +35,7 @@ type Greeting struct {
 
 func newGreeting(d dto.CreateGreeting) Greeting {
 	return Greeting{
-		Message: d.Message,
+		Message: d.UserInput.Message,
 	}
 }
 

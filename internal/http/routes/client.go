@@ -14,15 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package router
+package routes
 
 import (
 	"net/http"
 
 	go_http "github.com/caigwatkin/go/http"
 	go_log "github.com/caigwatkin/go/log"
-	"github.com/caigwatkin/slate/internal/api/parser"
 	"github.com/caigwatkin/slate/internal/app"
+	"github.com/caigwatkin/slate/internal/http/routes/parser"
 )
 
 type Client interface {

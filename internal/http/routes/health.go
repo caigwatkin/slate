@@ -14,20 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package dto
+package routes
 
-type CreateGreeting struct {
-	UserInput CreateGreetingUserInput
-}
+import (
+	"net/http"
+)
 
-type CreateGreetingUserInput struct {
-	Message string `json:"message"`
-}
-
-type ReadGreeting struct {
-	ID string
-}
-
-type DeleteGreeting struct {
-	ID string
+func (c client) Health() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		c.httpClient.RenderHealth(r.Context(), w, c.config.ServiceName)
+	}
 }
