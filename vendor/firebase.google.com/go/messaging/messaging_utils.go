@@ -16,6 +16,7 @@ package messaging
 
 import (
 	"fmt"
+	"net/url"
 	"regexp"
 	"strings"
 )
@@ -43,6 +44,11 @@ func validateMessage(message *Message) error {
 		}
 	}
 
+	// validate Notification
+	if err := validateNotification(message.Notification); err != nil {
+		return err
+	}
+
 	// validate AndroidConfig
 	if err := validateAndroidConfig(message.Android); err != nil {
 		return err
@@ -57,6 +63,20 @@ func validateMessage(message *Message) error {
 	return validateAPNSConfig(message.APNS)
 }
 
+func validateNotification(notification *Notification) error {
+	if notification == nil {
+		return nil
+	}
+
+	image := notification.ImageURL
+	if image != "" {
+		if _, err := url.ParseRequestURI(image); err != nil {
+			return fmt.Errorf("invalid image URL: %q", image)
+		}
+	}
+	return nil
+}
+
 func validateAndroidConfig(config *AndroidConfig) error {
 	if config == nil {
 		return nil
@@ -68,6 +88,7 @@ func validateAndroidConfig(config *AndroidConfig) error {
 	if config.Priority != "" && config.Priority != "normal" && config.Priority != "high" {
 		return fmt.Errorf("priority must be 'normal' or 'high'")
 	}
+
 	// validate AndroidNotification
 	return validateAndroidNotification(config.Notification)
 }
@@ -85,11 +106,26 @@ func validateAndroidNotification(notification *AndroidNotification) error {
 	if len(notification.BodyLocArgs) > 0 && notification.BodyLocKey == "" {
 		return fmt.Errorf("bodyLocKey is required when specifying bodyLocArgs")
 	}
+	image := notification.ImageURL
+	if image != "" {
+		if _, err := url.ParseRequestURI(image); err != nil {
+			return fmt.Errorf("invalid image URL: %q", image)
+		}
+	}
 	return nil
 }
 
 func validateAPNSConfig(config *APNSConfig) error {
 	if config != nil {
+		// validate FCMOptions
+		if config.FCMOptions != nil {
+			image := config.FCMOptions.ImageURL
+			if image != "" {
+				if _, err := url.ParseRequestURI(image); err != nil {
+					return fmt.Errorf("invalid image URL: %q", image)
+				}
+			}
+		}
 		return validateAPNSPayload(config.Payload)
 	}
 	return nil
@@ -97,6 +133,12 @@ func validateAPNSConfig(config *APNSConfig) error {
 
 func validateAPNSPayload(payload *APNSPayload) error {
 	if payload != nil {
+		m := payload.standardFields()
+		for k := range payload.CustomData {
+			if _, contains := m[k]; contains {
+				return fmt.Errorf("multiple specifications for the key %q", k)
+			}
+		}
 		return validateAps(payload.Aps)
 	}
 	return nil
@@ -106,6 +148,14 @@ func validateAps(aps *Aps) error {
 	if aps != nil {
 		if aps.Alert != nil && aps.AlertString != "" {
 			return fmt.Errorf("multiple alert specifications")
+		}
+		if aps.CriticalSound != nil {
+			if aps.Sound != "" {
+				return fmt.Errorf("multiple sound specifications")
+			}
+			if aps.CriticalSound.Volume < 0 || aps.CriticalSound.Volume > 1 {
+				return fmt.Errorf("critical sound volume must be in the interval [0, 1]")
+			}
 		}
 		m := aps.standardFields()
 		for k := range aps.CustomData {
@@ -125,6 +175,9 @@ func validateApsAlert(alert *ApsAlert) error {
 	if len(alert.TitleLocArgs) > 0 && alert.TitleLocKey == "" {
 		return fmt.Errorf("titleLocKey is required when specifying titleLocArgs")
 	}
+	if len(alert.SubTitleLocArgs) > 0 && alert.SubTitleLocKey == "" {
+		return fmt.Errorf("subtitleLocKey is required when specifying subtitleLocArgs")
+	}
 	if len(alert.LocArgs) > 0 && alert.LocKey == "" {
 		return fmt.Errorf("locKey is required when specifying locArgs")
 	}
@@ -143,6 +196,15 @@ func validateWebpushConfig(webpush *WebpushConfig) error {
 	for k := range webpush.Notification.CustomData {
 		if _, contains := m[k]; contains {
 			return fmt.Errorf("multiple specifications for the key %q", k)
+		}
+	}
+	if webpush.FcmOptions != nil {
+		link := webpush.FcmOptions.Link
+		p, err := url.ParseRequestURI(link)
+		if err != nil {
+			return fmt.Errorf("invalid link URL: %q", link)
+		} else if p.Scheme != "https" {
+			return fmt.Errorf("invalid link URL: %q; want scheme: %q", link, "https")
 		}
 	}
 	return nil

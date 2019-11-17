@@ -16,13 +16,10 @@
 package iid // import "firebase.google.com/go/iid"
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
-
-	"golang.org/x/net/context"
-
-	"google.golang.org/api/transport"
 
 	"firebase.google.com/go/internal"
 )
@@ -119,14 +116,14 @@ func NewClient(ctx context.Context, c *internal.InstanceIDConfig) (*Client, erro
 		return nil, errors.New("project id is required to access instance id client")
 	}
 
-	hc, _, err := transport.NewHTTPClient(ctx, c.Opts...)
+	hc, _, err := internal.NewHTTPClient(ctx, c.Opts...)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Client{
 		endpoint: iidEndpoint,
-		client:   &internal.HTTPClient{Client: hc},
+		client:   hc,
 		project:  c.ProjectID,
 	}, nil
 }

@@ -1,11 +1,11 @@
 package parser
 
 import (
-	go_log "github.com/caigwatkin/go/log"
+	go_log_mock "github.com/caigwatkin/go/log/mock"
 )
 
 var (
 	clientSuccess = client{
-		logClient: go_log.MockClientSuccess,
+		logClient: go_log_mock.MockClientSuccess,
 	}
 )

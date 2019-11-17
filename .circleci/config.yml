@@ -1,0 +1,38 @@
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.13
+
+    environment:
+      CODECOV_TOKEN: dfe8163e-dd0c-4c2e-9c62-bce7a87eeeff
+      LIB: github.com/caigwatkin/slate
+
+    steps:
+      - checkout
+
+      - run:
+          name: Vet and lint
+
+          command: |
+            go vet -mod=vendor $LIB/...
+            go run github.com/mgechev/revive -formatter=stylish -config=./configs/revive.toml -exclude=./vendor/... ./...
+
+      - run:
+          name: Run unit tests
+
+          command: |
+            go test -mod=vendor -coverprofile=coverage.txt -covermode=atomic $LIB/...
+            bash <(curl -s https://codecov.io/bash)
+
+      - run:
+          name: Build
+
+          command: |
+            go build -mod=vendor -o=./bin/slate
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build

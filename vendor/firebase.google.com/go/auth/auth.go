@@ -12,29 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package auth contains functions for minting custom authentication tokens, and verifying Firebase ID tokens.
+// Package auth contains functions for minting custom authentication tokens, verifying Firebase ID tokens,
+// and managing users in a Firebase project.
 package auth
 
 import (
-	"encoding/json"
+	"context"
 	"errors"
 	"fmt"
 	"strings"
 
-	"google.golang.org/api/option"
-
-	"golang.org/x/net/context"
-
 	"firebase.google.com/go/internal"
-	"google.golang.org/api/identitytoolkit/v3"
 	"google.golang.org/api/transport"
 )
 
 const (
 	firebaseAudience = "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit"
-	idTokenCertURL   = "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
-	issuerPrefix     = "https://securetoken.google.com/"
-	tokenExpSeconds  = 3600
+	oneHourInSeconds = 3600
 )
 
 var reservedClaims = []string{
@@ -42,38 +36,17 @@ var reservedClaims = []string{
 	"exp", "firebase", "iat", "iss", "jti", "nbf", "nonce", "sub",
 }
 
-var clk clock = &systemClock{}
-
-// Token represents a decoded Firebase ID token.
-//
-// Token provides typed accessors to the common JWT fields such as Audience (aud) and Expiry (exp).
-// Additionally it provides a UID field, which indicates the user ID of the account to which this token
-// belongs. Any additional JWT claims can be accessed via the Claims map of Token.
-type Token struct {
-	Issuer   string                 `json:"iss"`
-	Audience string                 `json:"aud"`
-	Expires  int64                  `json:"exp"`
-	IssuedAt int64                  `json:"iat"`
-	Subject  string                 `json:"sub,omitempty"`
-	UID      string                 `json:"uid,omitempty"`
-	Claims   map[string]interface{} `json:"-"`
-}
-
 // Client is the interface for the Firebase auth service.
 //
 // Client facilitates generating custom JWT tokens for Firebase clients, and verifying ID tokens issued
 // by Firebase backend services.
 type Client struct {
-	is        *identitytoolkit.Service
-	keySource keySource
-	projectID string
-	signer    cryptoSigner
-	version   string
-}
-
-type signer interface {
-	Email(ctx context.Context) (string, error)
-	Sign(ctx context.Context, b []byte) ([]byte, error)
+	*userManagementClient
+	*providerConfigClient
+	idTokenVerifier *tokenVerifier
+	cookieVerifier  *tokenVerifier
+	signer          cryptoSigner
+	clock           internal.Clock
 }
 
 // NewClient creates a new instance of the Firebase Auth Client.
@@ -88,16 +61,9 @@ func NewClient(ctx context.Context, conf *internal.AuthConfig) (*Client, error) 
 	// Initialize a signer by following the go/firebase-admin-sign protocol.
 	if conf.Creds != nil && len(conf.Creds.JSON) > 0 {
 		// If the SDK was initialized with a service account, use it to sign bytes.
-		var sa serviceAccount
-		if err = json.Unmarshal(conf.Creds.JSON, &sa); err != nil {
+		signer, err = signerFromCreds(conf.Creds.JSON)
+		if err != nil && err != errNotAServiceAcct {
 			return nil, err
-		}
-		if sa.PrivateKey != "" && sa.ClientEmail != "" {
-			var err error
-			signer, err = newServiceAccountSigner(sa)
-			if err != nil {
-				return nil, err
-			}
 		}
 	}
 	if signer == nil {
@@ -118,26 +84,28 @@ func NewClient(ctx context.Context, conf *internal.AuthConfig) (*Client, error) 
 		}
 	}
 
+	idTokenVerifier, err := newIDTokenVerifier(ctx, conf.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
+	cookieVerifier, err := newSessionCookieVerifier(ctx, conf.ProjectID)
+	if err != nil {
+		return nil, err
+	}
+
 	hc, _, err := transport.NewHTTPClient(ctx, conf.Opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	is, err := identitytoolkit.New(hc)
-	if err != nil {
-		return nil, err
-	}
-
-	noAuthHTTPClient, _, err := transport.NewHTTPClient(ctx, option.WithoutAuthentication())
-	if err != nil {
-		return nil, err
-	}
 	return &Client{
-		is:        is,
-		keySource: newHTTPKeySource(idTokenCertURL, noAuthHTTPClient),
-		projectID: conf.ProjectID,
-		signer:    signer,
-		version:   "Go/Admin/" + conf.Version,
+		userManagementClient: newUserManagementClient(hc, conf),
+		providerConfigClient: newProviderConfigClient(hc, conf),
+		idTokenVerifier:      idTokenVerifier,
+		cookieVerifier:       cookieVerifier,
+		signer:               signer,
+		clock:                internal.SystemClock,
 	}, nil
 }
 
@@ -188,7 +156,7 @@ func (c *Client) CustomTokenWithClaims(ctx context.Context, uid string, devClaim
 		return "", fmt.Errorf("developer claims %q are reserved and cannot be specified", strings.Join(disallowed, ", "))
 	}
 
-	now := clk.Now().Unix()
+	now := c.clock.Now().Unix()
 	info := &jwtInfo{
 		header: jwtHeader{Algorithm: "RS256", Type: "JWT"},
 		payload: &customToken{
@@ -197,11 +165,26 @@ func (c *Client) CustomTokenWithClaims(ctx context.Context, uid string, devClaim
 			Aud:    firebaseAudience,
 			UID:    uid,
 			Iat:    now,
-			Exp:    now + tokenExpSeconds,
+			Exp:    now + oneHourInSeconds,
 			Claims: devClaims,
 		},
 	}
 	return info.Token(ctx, c.signer)
+}
+
+// Token represents a decoded Firebase ID token.
+//
+// Token provides typed accessors to the common JWT fields such as Audience (aud) and Expiry (exp).
+// Additionally it provides a UID field, which indicates the user ID of the account to which this token
+// belongs. Any additional JWT claims can be accessed via the Claims map of Token.
+type Token struct {
+	Issuer   string                 `json:"iss"`
+	Audience string                 `json:"aud"`
+	Expires  int64                  `json:"exp"`
+	IssuedAt int64                  `json:"iat"`
+	Subject  string                 `json:"sub,omitempty"`
+	UID      string                 `json:"uid,omitempty"`
+	Claims   map[string]interface{} `json:"-"`
 }
 
 // VerifyIDToken verifies the signature	and payload of the provided ID token.
@@ -211,96 +194,85 @@ func (c *Client) CustomTokenWithClaims(ctx context.Context, uid string, devClaim
 // a Token containing the decoded claims in the input JWT. See
 // https://firebase.google.com/docs/auth/admin/verify-id-tokens#retrieve_id_tokens_on_clients for
 // more details on how to obtain an ID token in a client app.
-// This does not check whether or not the token has been revoked. See `VerifyIDTokenAndCheckRevoked` below.
+//
+// This function does not make any RPC calls most of the time. The only time it makes an RPC call
+// is when Google public keys need to be refreshed. These keys get cached up to 24 hours, and
+// therefore the RPC overhead gets amortized over many invocations of this function.
+//
+// This does not check whether or not the token has been revoked. Use `VerifyIDTokenAndCheckRevoked()`
+// when a revocation check is needed.
 func (c *Client) VerifyIDToken(ctx context.Context, idToken string) (*Token, error) {
-	if c.projectID == "" {
-		return nil, errors.New("project id not available")
-	}
-	if idToken == "" {
-		return nil, fmt.Errorf("id token must be a non-empty string")
-	}
-
-	if err := verifyToken(ctx, idToken, c.keySource); err != nil {
-		return nil, err
-	}
-	segments := strings.Split(idToken, ".")
-
-	var (
-		header  jwtHeader
-		payload Token
-		claims  map[string]interface{}
-	)
-	if err := decode(segments[0], &header); err != nil {
-		return nil, err
-	}
-	if err := decode(segments[1], &payload); err != nil {
-		return nil, err
-	}
-	if err := decode(segments[1], &claims); err != nil {
-		return nil, err
-	}
-	// Delete standard claims from the custom claims maps.
-	for _, r := range []string{"iss", "aud", "exp", "iat", "sub", "uid"} {
-		delete(claims, r)
-	}
-	payload.Claims = claims
-
-	projectIDMsg := "make sure the ID token comes from the same Firebase project as the credential used to" +
-		" authenticate this SDK"
-	verifyTokenMsg := "see https://firebase.google.com/docs/auth/admin/verify-id-tokens for details on how to " +
-		"retrieve a valid ID token"
-	issuer := issuerPrefix + c.projectID
-
-	var err error
-	if header.KeyID == "" {
-		if payload.Audience == firebaseAudience {
-			err = fmt.Errorf("expected an ID token but got a custom token")
-		} else {
-			err = fmt.Errorf("ID token has no 'kid' header")
-		}
-	} else if header.Algorithm != "RS256" {
-		err = fmt.Errorf("ID token has invalid algorithm; expected 'RS256' but got %q; %s",
-			header.Algorithm, verifyTokenMsg)
-	} else if payload.Audience != c.projectID {
-		err = fmt.Errorf("ID token has invalid 'aud' (audience) claim; expected %q but got %q; %s; %s",
-			c.projectID, payload.Audience, projectIDMsg, verifyTokenMsg)
-	} else if payload.Issuer != issuer {
-		err = fmt.Errorf("ID token has invalid 'iss' (issuer) claim; expected %q but got %q; %s; %s",
-			issuer, payload.Issuer, projectIDMsg, verifyTokenMsg)
-	} else if payload.IssuedAt > clk.Now().Unix() {
-		err = fmt.Errorf("ID token issued at future timestamp: %d", payload.IssuedAt)
-	} else if payload.Expires < clk.Now().Unix() {
-		err = fmt.Errorf("ID token has expired at: %d", payload.Expires)
-	} else if payload.Subject == "" {
-		err = fmt.Errorf("ID token has empty 'sub' (subject) claim; %s", verifyTokenMsg)
-	} else if len(payload.Subject) > 128 {
-		err = fmt.Errorf("ID token has a 'sub' (subject) claim longer than 128 characters; %s", verifyTokenMsg)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-	payload.UID = payload.Subject
-	return &payload, nil
+	return c.idTokenVerifier.VerifyToken(ctx, idToken)
 }
 
-// VerifyIDTokenAndCheckRevoked verifies the provided ID token and checks it has not been revoked.
+// VerifyIDTokenAndCheckRevoked verifies the provided ID token, and additionally checks that the
+// token has not been revoked.
 //
-// VerifyIDTokenAndCheckRevoked verifies the signature and payload of the provided ID token and
-// checks that it wasn't revoked. Uses VerifyIDToken() internally to verify the ID token JWT.
+// This function uses `VerifyIDToken()` internally to verify the ID token JWT. However, unlike
+// `VerifyIDToken()` this function must make an RPC call to perform the revocation check.
+// Developers are advised to take this additional overhead into consideration when including this
+// function in an authorization flow that gets executed often.
 func (c *Client) VerifyIDTokenAndCheckRevoked(ctx context.Context, idToken string) (*Token, error) {
 	p, err := c.VerifyIDToken(ctx, idToken)
 	if err != nil {
 		return nil, err
 	}
 
-	user, err := c.GetUser(ctx, p.UID)
+	revoked, err := c.checkRevoked(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	if revoked {
+		return nil, internal.Error(idTokenRevoked, "ID token has been revoked")
+	}
+	return p, nil
+}
+
+// VerifySessionCookie verifies the signature and payload of the provided Firebase session cookie.
+//
+// VerifySessionCookie accepts a signed JWT token string, and verifies that it is current, issued for the
+// correct Firebase project, and signed by the Google Firebase services in the cloud. It returns a Token containing the
+// decoded claims in the input JWT. See https://firebase.google.com/docs/auth/admin/manage-cookies for more details on
+// how to obtain a session cookie.
+//
+// This function does not make any RPC calls most of the time. The only time it makes an RPC call
+// is when Google public keys need to be refreshed. These keys get cached up to 24 hours, and
+// therefore the RPC overhead gets amortized over many invocations of this function.
+//
+// This does not check whether or not the cookie has been revoked. Use `VerifySessionCookieAndCheckRevoked()`
+// when a revocation check is needed.
+func (c *Client) VerifySessionCookie(ctx context.Context, sessionCookie string) (*Token, error) {
+	return c.cookieVerifier.VerifyToken(ctx, sessionCookie)
+}
+
+// VerifySessionCookieAndCheckRevoked verifies the provided session cookie, and additionally checks that the
+// cookie has not been revoked.
+//
+// This function uses `VerifySessionCookie()` internally to verify the cookie JWT. However, unlike
+// `VerifySessionCookie()` this function must make an RPC call to perform the revocation check.
+// Developers are advised to take this additional overhead into consideration when including this
+// function in an authorization flow that gets executed often.
+func (c *Client) VerifySessionCookieAndCheckRevoked(ctx context.Context, sessionCookie string) (*Token, error) {
+	p, err := c.VerifySessionCookie(ctx, sessionCookie)
 	if err != nil {
 		return nil, err
 	}
 
-	if p.IssuedAt*1000 < user.TokensValidAfterMillis {
-		return nil, internal.Error(idTokenRevoked, "ID token has been revoked")
+	revoked, err := c.checkRevoked(ctx, p)
+	if err != nil {
+		return nil, err
+	}
+	if revoked {
+		return nil, internal.Error(sessionCookieRevoked, "session cookie has been revoked")
 	}
 	return p, nil
+}
+
+func (c *Client) checkRevoked(ctx context.Context, token *Token) (bool, error) {
+	user, err := c.GetUser(ctx, token.UID)
+	if err != nil {
+		return false, err
+	}
+
+	return token.IssuedAt*1000 < user.TokensValidAfterMillis, nil
 }

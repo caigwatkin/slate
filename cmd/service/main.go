@@ -45,11 +45,11 @@ var (
 )
 
 func init() {
+	flag.StringVar(&cloudkmsKey, "cloudkmsKey", "slate", "GCP cloud KMS key")
+	flag.StringVar(&cloudkmsKeyRing, "cloudkmsKeyRing", "slate", "GCP cloud KMS key ring")
 	flag.BoolVar(&debug, "debug", true, "Debug mode on/off")
 	flag.StringVar(&env, "env", "dev", "Deployment environment")
 	flag.StringVar(&gcpProjectID, "gcpProjectID", "slate-00", "GCP project ID")
-	flag.StringVar(&cloudkmsKey, "cloudkmsKey", "slate", "GCP cloud KMS key")
-	flag.StringVar(&cloudkmsKeyRing, "cloudkmsKeyRing", "slate", "GCP cloud KMS key ring")
 	flag.IntVar(&port, "port", 8080, "Port")
 	flag.StringVar(&secretsBucket, "secretsBucket", "slate-api-config", "GCP bucket storing secrets directory")
 	flag.StringVar(&secretsBucketDir, "secretsBucketDir", "secrets", "GCP bucket secrets directory storing secrets")
@@ -62,11 +62,11 @@ func main() {
 
 	logClient := go_log.NewClient(debug)
 	logClient.Info(ctx, "Logger initialised",
+		go_log.FmtString(cloudkmsKey, "cloudkmsKey"),
+		go_log.FmtString(cloudkmsKeyRing, "cloudkmsKeyRing"),
 		go_log.FmtBool(debug, "debug"),
 		go_log.FmtString(env, "env"),
 		go_log.FmtString(gcpProjectID, "gcpProjectID"),
-		go_log.FmtString(cloudkmsKey, "cloudkmsKey"),
-		go_log.FmtString(cloudkmsKeyRing, "cloudkmsKeyRing"),
 		go_log.FmtInt(port, "port"),
 		go_log.FmtString(secretsBucket, "secretsBucket"),
 		go_log.FmtString(secretsBucketDir, "secretsBucketDir"),
@@ -79,7 +79,12 @@ func main() {
 	logClient.Info(ctx, "Created go HTTP client")
 
 	logClient.Info(ctx, "Creating secrets client")
-	secretsClient, err := go_secrets.NewClient(ctx, env, gcpProjectID, cloudkmsKeyRing, cloudkmsKey)
+	secretsClient, err := go_secrets.NewClient(ctx, go_secrets.Config{
+		CloudkmsKey:     cloudkmsKey,
+		CloudkmsKeyRing: cloudkmsKeyRing,
+		Env:             env,
+		GcpProjectId:    gcpProjectID,
+	})
 	if err != nil {
 		logClient.Fatal(ctx, "Failed creating secrets client", go_log.FmtError(err))
 	}
