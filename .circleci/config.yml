@@ -30,7 +30,7 @@ jobs:
           name: Build
 
           command: |
-            go build -mod=vendor -o=./bin/slate
+            go build -mod=vendor -o=./bin/slate ./cmd/service
 
 workflows:
   version: 2
