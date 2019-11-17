@@ -6,6 +6,7 @@ jobs:
 
     environment:
       CODECOV_TOKEN: dfe8163e-dd0c-4c2e-9c62-bce7a87eeeff
+      GOPRIVATE: github.com/caigwatkin/*
       LIB: github.com/caigwatkin/slate
 
     steps:
