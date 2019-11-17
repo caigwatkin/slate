@@ -17,7 +17,11 @@ limitations under the License.
 package dto
 
 type CreateGreeting struct {
-	Message string
+	UserInput CreateGreetingUserInput
+}
+
+type CreateGreetingUserInput struct {
+	Message string `json:"message"`
 }
 
 type ReadGreeting struct {
